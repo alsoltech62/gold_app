@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../providers/gold_provider.dart';
+
+class SellGoldScreen extends StatefulWidget {
+  const SellGoldScreen({super.key});
+
+  @override
+  State<SellGoldScreen> createState() => _SellGoldScreenState();
+}
+
+class _SellGoldScreenState extends State<SellGoldScreen> {
+  final _gramsController = TextEditingController();
+  double _amount = 0.0;
+
+  void _calculateAmount(String value) {
+    if (value.isEmpty) {
+      setState(() => _amount = 0.0);
+      return;
+    }
+    final grams = double.tryParse(value) ?? 0.0;
+    final rate = Provider.of<GoldProvider>(context, listen: false).currentRate?['rate_per_gram'] ?? 0.0;
+    if (rate > 0) {
+      setState(() => _amount = grams * rate);
+    }
+  }
+
+  void _handleSell() async {
+    final grams = double.tryParse(_gramsController.text) ?? 0.0;
+    if (grams <= 0) return;
+
+    final goldProvider = Provider.of<GoldProvider>(context, listen: false);
+    final result = await goldProvider.sellGold(grams);
+    
+    if (!mounted) return;
+    
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sell request submitted successfully!')),
+      );
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to submit request.'),
+          backgroundColor: Colors.orange.shade800,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalGrams = Provider.of<GoldProvider>(context).dashboardData?['total_gold_grams'] ?? 0.0;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('SELL GOLD')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Sell back your Gold',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ).animate().fadeIn(),
+            const SizedBox(height: 10),
+            Text(
+              'Available Balance: ${totalGrams.toStringAsFixed(4)} gms',
+              style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+            ).animate().fadeIn(delay: 200.ms),
+            const SizedBox(height: 40),
+            TextField(
+              controller: _gramsController,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+              onChanged: _calculateAmount,
+              decoration: const InputDecoration(
+                labelText: 'Enter Grams',
+                suffixText: 'gms',
+                suffixStyle: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+            const SizedBox(height: 20),
+            if (_amount > 0)
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.currency_rupee, color: Color(0xFFFFD700), size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      'You will receive: ₹${_amount.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn().scale(),
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.grey, size: 16),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'The amount will be credited to your linked bank account within 24-48 hours.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 600.ms),
+            const SizedBox(height: 60),
+            SizedBox(
+              width: double.infinity,
+              child: Consumer<GoldProvider>(
+                builder: (context, gold, child) {
+                  return ElevatedButton(
+                    onPressed: gold.isLoading ? null : _handleSell,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: gold.isLoading
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('SUBMIT SELL REQUEST'),
+                  );
+                },
+              ),
+            ).animate().fadeIn(delay: 800.ms).scale(),
+          ],
+        ),
+      ),
+    );
+  }
+}
