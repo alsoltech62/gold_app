@@ -10,7 +10,10 @@ import '../transactions/transaction_list_screen.dart';
 import '../delivery/delivery_screen.dart';
 import '../notifications_screen.dart';
 import '../silver/silver_screen.dart';
+import '../silver/silver_screen.dart';
 import '../gold/lock_in_screen.dart';
+
+enum ActionType { buy, sell, lockIn, delivery }
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -225,13 +228,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          _buildActionItem(context, 'BUY', Icons.add_shopping_cart, isBuy: true),
+          _buildActionItem(context, 'BUY', Icons.add_shopping_cart, action: ActionType.buy),
           const SizedBox(width: 25),
-          _buildActionItem(context, 'SELL', Icons.sell, isBuy: false),
+          _buildActionItem(context, 'SELL', Icons.sell, action: ActionType.sell),
           const SizedBox(width: 25),
-          _buildActionItem(context, 'LOCK IN', Icons.lock_clock, target: const LockInScreen()),
+          _buildActionItem(context, 'LOCK IN', Icons.lock_clock, action: ActionType.lockIn),
           const SizedBox(width: 25),
-          _buildActionItem(context, 'DELIVERY', Icons.local_shipping, target: const DeliveryScreen()),
+          _buildActionItem(context, 'DELIVERY', Icons.local_shipping, action: ActionType.delivery),
           const SizedBox(width: 25),
           _buildActionItem(context, 'HISTORY', Icons.history, target: const TransactionListScreen()),
         ],
@@ -239,13 +242,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).animate().fadeIn(delay: 400.ms);
   }
 
-  Widget _buildActionItem(BuildContext context, String label, IconData icon, {Widget? target, bool? isBuy}) {
+  Widget _buildActionItem(BuildContext context, String label, IconData icon, {Widget? target, ActionType? action}) {
     return GestureDetector(
       onTap: () {
         if (target != null) {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
-        } else if (isBuy != null) {
-          _showMetalSelectionDialog(context, isBuy: isBuy);
+        } else if (action != null) {
+          _showMetalSelectionDialog(context, action: action);
         }
       },
       child: Column(
@@ -266,7 +269,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showMetalSelectionDialog(BuildContext context, {required bool isBuy}) {
+  void _showMetalSelectionDialog(BuildContext context, {required ActionType action}) {
+    String title = '';
+    switch (action) {
+      case ActionType.buy: title = 'Select Metal to Buy'; break;
+      case ActionType.sell: title = 'Select Metal to Sell'; break;
+      case ActionType.lockIn: title = 'Select Metal to Lock'; break;
+      case ActionType.delivery: title = 'Select Metal for Delivery'; break;
+    }
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -278,7 +289,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                isBuy ? 'Select Metal to Buy' : 'Select Metal to Sell',
+                title,
                 style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
@@ -288,7 +299,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: InkWell(
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => isBuy ? const BuyFlowScreen() : const SellFlowScreen()));
+                        Widget target;
+                        switch (action) {
+                          case ActionType.buy: target = const BuyFlowScreen(); break;
+                          case ActionType.sell: target = const SellFlowScreen(); break;
+                          case ActionType.lockIn: target = const LockInScreen(metalType: 'gold'); break;
+                          case ActionType.delivery: target = const DeliveryScreen(metalType: 'gold'); break;
+                        }
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
@@ -303,7 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const Text('🥇', style: TextStyle(fontSize: 32)),
                             const SizedBox(height: 8),
                             const Text('Gold', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text(isBuy ? '24K / 999' : 'Asset', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                            Text(action == ActionType.buy ? '24K / 999' : 'Asset', style: const TextStyle(color: Colors.white54, fontSize: 10)),
                           ],
                         ),
                       ),
@@ -314,7 +332,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: InkWell(
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SilverScreen()));
+                        Widget target;
+                        switch (action) {
+                          case ActionType.buy: target = const SilverScreen(); break;
+                          case ActionType.sell: target = const SellFlowScreen(metalType: 'silver'); break; 
+                          case ActionType.lockIn: target = const LockInScreen(metalType: 'silver'); break;
+                          case ActionType.delivery: target = const DeliveryScreen(metalType: 'silver'); break;
+                        }
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(

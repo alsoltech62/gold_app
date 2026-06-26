@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'sell_gold_screen.dart';
+import '../silver/silver_screen.dart';
 import 'lock_in_screen.dart';
 
 class SellFlowScreen extends StatelessWidget {
-  const SellFlowScreen({super.key});
+  final String metalType;
+  const SellFlowScreen({super.key, this.metalType = 'gold'});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sell Gold'),
+        title: Text('Sell ${metalType == 'silver' ? 'Silver' : 'Gold'}'),
         centerTitle: true,
       ),
       body: Padding(
@@ -27,10 +29,10 @@ class SellFlowScreen extends StatelessWidget {
             _buildOptionCard(
               context: context,
               title: 'Get up to 12% Extra',
-              subtitle: 'Instead of selling now, lock your gold in our vault for 6-36 months and earn up to 12% guaranteed extra returns.',
+              subtitle: 'Instead of selling now, lock your ${metalType} in our vault for 6-36 months and earn up to 12% guaranteed extra returns.',
               icon: Icons.lock,
-              color: const Color(0xFFFFD700),
-              target: const LockInScreen(),
+              color: metalType == 'silver' ? Colors.grey : const Color(0xFFFFD700),
+              target: LockInScreen(metalType: metalType),
               isRecommended: true,
             ).animate().slideX(),
             
@@ -39,10 +41,10 @@ class SellFlowScreen extends StatelessWidget {
             _buildOptionCard(
               context: context,
               title: 'Sell Anyway',
-              subtitle: 'Liquidate your gold immediately at the current market rate. Funds will be transferred to your wallet instantly.',
+              subtitle: 'Liquidate your ${metalType} immediately at the current market rate. Funds will be transferred to your wallet instantly.',
               icon: Icons.account_balance_wallet,
               color: Colors.red,
-              target: const SellGoldScreen(),
+              target: metalType == 'silver' ? const SilverScreen(initialIsBuy: false) : const SellGoldScreen(),
             ).animate().slideX(delay: 200.ms),
           ],
         ),

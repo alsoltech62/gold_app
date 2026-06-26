@@ -4,7 +4,8 @@ import '../../providers/gold_provider.dart';
 import '../gold/lock_in_modal.dart';
 
 class DeliveryScreen extends StatefulWidget {
-  const DeliveryScreen({super.key});
+  final String metalType;
+  const DeliveryScreen({super.key, this.metalType = 'gold'});
 
   @override
   State<DeliveryScreen> createState() => _DeliveryScreenState();
@@ -47,9 +48,10 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
     LockInModal.show(
       context: context,
       title: 'Earn More Before Delivery',
-      message: 'If you want, you can get additional returns by locking your gold for a specific period before taking delivery.',
+      message: 'If you want, you can get additional returns by locking your ${widget.metalType} for a specific period before taking delivery.',
       primaryActionText: 'Lock & Earn More',
       secondaryActionText: 'Continue Delivery',
+      metalType: widget.metalType,
       onSecondaryAction: () {
         _submitRequest(grams, street, city, state, pincode);
       },
@@ -60,12 +62,12 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
 
     final provider = Provider.of<GoldProvider>(context, listen: false);
     final address = '$street, $city, $state - $pincode';
-    final result = await provider.requestDelivery(grams, address, city, state, pincode);
+    final result = await provider.requestDelivery(grams, address, city, state, pincode, widget.metalType);
 
     if (!mounted) return;
 
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Physical gold delivery request submitted!')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Physical ${widget.metalType} delivery request submitted!')));
       _gramsController.clear();
       _streetController.clear();
       _cityController.clear();
@@ -84,7 +86,9 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<GoldProvider>(context);
-    final balance = provider.dashboardData?['total_gold_grams'] ?? 0.0;
+    final balance = widget.metalType == 'silver' 
+        ? (provider.dashboardData?['total_silver_grams'] ?? 0.0) 
+        : (provider.dashboardData?['total_gold_grams'] ?? 0.0);
     final deliveries = provider.deliveries;
 
     return Scaffold(
@@ -97,7 +101,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Request secure delivery of your 24K gold assets', style: TextStyle(color: Colors.grey)),
+            Text('Request secure delivery of your ${widget.metalType == 'silver' ? '999 silver' : '24K gold'} assets', style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
             
             Container(
@@ -116,7 +120,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
             ),
             const SizedBox(height: 30),
 
-            const Text('Gold Quantity (min 1g)', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('${widget.metalType == 'silver' ? 'Silver' : 'Gold'} Quantity (min 1g)', style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
               controller: _gramsController,
@@ -208,6 +212,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
                             children: [
                               Text('${d['gold_grams']}g Shipment', style: const TextStyle(fontWeight: FontWeight.bold)),
                               Text(d['created_at'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              if (d['metal_type'] != null) Text(d['metal_type'].toString().toUpperCase(), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                             ],
                           ),
                         ),

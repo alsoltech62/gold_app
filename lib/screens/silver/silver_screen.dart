@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/gold_provider.dart';
+import '../gold/lock_in_modal.dart';
 
 class SilverScreen extends StatefulWidget {
-  const SilverScreen({super.key});
+  final bool initialIsBuy;
+  const SilverScreen({super.key, this.initialIsBuy = true});
 
   @override
   State<SilverScreen> createState() => _SilverScreenState();
@@ -19,6 +21,7 @@ class _SilverScreenState extends State<SilverScreen> {
   @override
   void initState() {
     super.initState();
+    _isBuy = widget.initialIsBuy;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<GoldProvider>(context, listen: false).fetchSilverRate();
     });
@@ -48,6 +51,21 @@ class _SilverScreenState extends State<SilverScreen> {
 
     if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_isBuy ? 'Silver purchased successfully!' : 'Silver sold successfully!')));
+      
+      if (_isBuy) {
+        LockInModal.show(
+          context: context,
+          title: 'Increase Your Returns with Lock-In Investment',
+          message: 'If you want, you can get additional returns by locking your silver for a specific period.',
+          primaryActionText: 'Lock Now',
+          secondaryActionText: 'Skip & Continue',
+          metalType: 'silver',
+          onSecondaryAction: () {
+            Navigator.of(context).pop();
+          },
+        );
+      }
+      
       _amountController.clear();
       _gramsController.clear();
     } else {

@@ -152,17 +152,18 @@ class GoldProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> requestDelivery(double grams, String address, String city, String state, String pincode) async {
+  Future<Map<String, dynamic>> requestDelivery(double grams, String address, String city, String state, String pincode, [String metalType = 'gold']) async {
     _isLoading = true;
     notifyListeners();
     try {
       final response = await _apiClient.post('/api/delivery/request.php', {
-        'gold_grams': grams,
+        'grams': grams,
         'address': address,
         'delivery_address': address,
         'city': city,
         'state': state,
         'pincode': pincode,
+        'metal_type': metalType,
       });
       _isLoading = false;
       if (response['success'] == true) {
@@ -304,13 +305,14 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> createLockIn(int months, double grams) async {
+  Future<Map<String, dynamic>> createLockIn(int months, double grams, [String metalType = 'gold']) async {
     _isLoading = true;
     notifyListeners();
     try {
       final response = await _apiClient.post('/api/lockin/create.php', {
         'months': months,
-        'gold_grams': grams,
+        'grams': grams,
+        'metal_type': metalType,
       });
       _isLoading = false;
       if (response['success'] == true) {

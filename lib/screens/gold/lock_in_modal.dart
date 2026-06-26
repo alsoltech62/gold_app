@@ -10,6 +10,7 @@ class LockInModal {
     required String primaryActionText,
     required String secondaryActionText,
     required VoidCallback onSecondaryAction,
+    String metalType = 'gold',
   }) {
     showDialog(
       context: context,
@@ -73,10 +74,10 @@ class LockInModal {
                     children: [
                       const Icon(Icons.security, color: Color(0xFFFFD700), size: 16),
                       const SizedBox(width: 10),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Earn up to 12% guaranteed extra return by locking your gold securely with us.',
-                          style: TextStyle(fontSize: 12, color: Colors.white70),
+                          'Earn up to 12% guaranteed extra return by locking your $metalType securely with us.',
+                          style: const TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                       ),
                     ],
@@ -89,7 +90,7 @@ class LockInModal {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const LockInScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => LockInScreen(metalType: metalType)));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFD700),
