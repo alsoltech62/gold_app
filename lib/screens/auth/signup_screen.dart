@@ -15,12 +15,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _pincodeController = TextEditingController();
-  final _aadharController = TextEditingController();
-  final _panController = TextEditingController();
+  final _referralController = TextEditingController();
 
   void _handleSignup() async {
     if (_formKey.currentState!.validate()) {
@@ -29,12 +24,7 @@ class _SignupScreenState extends State<SignupScreen> {
         'name': _nameController.text,
         'mobile': _mobileController.text,
         'email': _emailController.text,
-        'address': _addressController.text,
-        'city': _cityController.text,
-        'state': _stateController.text,
-        'pincode': _pincodeController.text,
-        'aadhar_number': _aadharController.text,
-        'pan_number': _panController.text,
+        'referral_code': _referralController.text,
       });
 
       if (response['success'] == true) {
@@ -93,21 +83,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   _buildTextField(_emailController, 'Email Address', Icons.email, keyboardType: TextInputType.emailAddress),
                   
                   const SizedBox(height: 20),
-                  _buildSectionTitle('Address Details'),
-                  _buildTextField(_addressController, 'Full Address', Icons.home),
-                  Row(
-                    children: [
-                      Expanded(child: _buildTextField(_cityController, 'City', Icons.location_city)),
-                      const SizedBox(width: 15),
-                      Expanded(child: _buildTextField(_stateController, 'State', Icons.map)),
-                    ],
-                  ),
-                  _buildTextField(_pincodeController, 'Pincode', Icons.pin_drop, keyboardType: TextInputType.number),
-                  
-                  const SizedBox(height: 20),
-                  _buildSectionTitle('Identity Verification'),
-                  _buildTextField(_aadharController, 'Aadhar Number', Icons.credit_card, keyboardType: TextInputType.number),
-                  _buildTextField(_panController, 'PAN Number', Icons.badge),
+                  _buildSectionTitle('Referral (Optional)'),
+                  _buildTextField(_referralController, 'Referral Code (Mobile No)', Icons.group, isRequired: false),
                   
                   const SizedBox(height: 40),
                   SizedBox(
@@ -153,6 +130,7 @@ class _SignupScreenState extends State<SignupScreen> {
     String label,
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
+    bool isRequired = true,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
@@ -165,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
           prefixIcon: Icon(icon, color: const Color(0xFFFFD700), size: 20),
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) {
+          if (isRequired && (value == null || value.isEmpty)) {
             return 'Please enter $label';
           }
           return null;

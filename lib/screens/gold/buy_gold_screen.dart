@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../providers/gold_provider.dart';
+import '../../providers/auth_provider.dart';
 import 'lock_in_modal.dart';
 
 class BuyGoldScreen extends StatefulWidget {
@@ -15,6 +17,69 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
   final _amountController = TextEditingController();
   double _grams = 0.0;
   String _paymentMethod = 'UPI';
+  late Razorpay _razorpay;
+  bool _isProcessingPayment = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    final goldProvider = Provider.of<GoldProvider>(context, listen: false);
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    
+    final result = await goldProvider.buyGold(
+      amount, 
+      'UPI', 
+      response.paymentId ?? '',
+      razorpayOrderId: response.orderId,
+      razorpaySignature: response.signature,
+    );
+    
+    setState(() => _isProcessingPayment = false);
+    
+    if (!mounted) return;
+    
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gold purchased successfully!')));
+      LockInModal.show(
+        context: context,
+        title: 'Increase Your Returns with Lock-In Investment',
+        message: 'If you want, you can get additional returns by locking your gold for a specific period.',
+        primaryActionText: 'Lock Now',
+        secondaryActionText: 'Skip & Continue',
+        onSecondaryAction: () => Navigator.of(context).pop(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Verification failed.'), backgroundColor: Colors.red));
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    setState(() => _isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message}'), backgroundColor: Colors.red),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    setState(() => _isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('External Wallet Selected: ${response.walletName}')),
+    );
+  }
 
   void _calculateGrams(String value) {
     if (value.isEmpty) {
@@ -30,34 +95,62 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
 
   void _handleBuy() async {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
-    if (amount <= 0) return;
+    if (amount < 100) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimum investment is ₹100')));
+      return;
+    }
 
     final goldProvider = Provider.of<GoldProvider>(context, listen: false);
-    final result = await goldProvider.buyGold(amount, _paymentMethod, 'MOCK_TXN_${DateTime.now().millisecondsSinceEpoch}');
+
+    if (_paymentMethod != 'UPI') {
+      final result = await goldProvider.buyGold(amount, _paymentMethod, 'WALLET_TXN');
+      if (!mounted) return;
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gold purchased successfully!')));
+        LockInModal.show(
+          context: context,
+          title: 'Increase Your Returns with Lock-In Investment',
+          message: 'If you want, you can get additional returns by locking your gold for a specific period.',
+          primaryActionText: 'Lock Now',
+          secondaryActionText: 'Skip & Continue',
+          onSecondaryAction: () => Navigator.of(context).pop(),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Transaction failed.'), backgroundColor: Colors.red));
+      }
+      return;
+    }
+
+    setState(() => _isProcessingPayment = true);
+    final orderRes = await goldProvider.createPaymentOrder(amount);
     
-    if (!mounted) return;
-    
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gold purchased successfully!')),
-      );
-      LockInModal.show(
-        context: context,
-        title: 'Increase Your Returns with Lock-In Investment',
-        message: 'If you want, you can get additional returns by locking your gold for a specific period.',
-        primaryActionText: 'Lock Now',
-        secondaryActionText: 'Skip & Continue',
-        onSecondaryAction: () {
-          Navigator.of(context).pop();
+    if (orderRes['success'] == true) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.user;
+      
+      final orderData = orderRes['data'];
+      var options = {
+        'key': orderData['key'],
+        'amount': orderData['amount'],
+        'name': 'GoldVault',
+        'description': 'Purchase of ${_grams.toStringAsFixed(4)}g 24K Gold',
+        'order_id': orderData['order_id'],
+        'prefill': {
+          'contact': user?['mobile'] ?? '',
+          'name': user?['name'] ?? '',
         },
-      );
+        'theme': {'color': '#D4AF37'}
+      };
+      
+      try {
+        _razorpay.open(options);
+      } catch (e) {
+        setState(() => _isProcessingPayment = false);
+        debugPrint('Error: $e');
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Transaction failed. Please try again.'),
-          backgroundColor: Colors.orange.shade800,
-        ),
-      );
+      setState(() => _isProcessingPayment = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create payment order.'), backgroundColor: Colors.red));
     }
   }
 
@@ -157,8 +250,8 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               child: Consumer<GoldProvider>(
                 builder: (context, gold, child) {
                   return ElevatedButton(
-                    onPressed: gold.isLoading ? null : _handleBuy,
-                    child: gold.isLoading
+                    onPressed: (gold.isLoading || _isProcessingPayment) ? null : _handleBuy,
+                    child: (gold.isLoading || _isProcessingPayment)
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Text('PROCEED TO PAYMENT'),
                   );

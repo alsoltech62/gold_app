@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'sell_gold_screen.dart';
-import '../silver/silver_screen.dart';
+import '../silver/sell_silver_screen.dart';
 import 'lock_in_screen.dart';
 
 class SellFlowScreen extends StatelessWidget {
@@ -44,7 +44,7 @@ class SellFlowScreen extends StatelessWidget {
               subtitle: 'Liquidate your ${metalType} immediately at the current market rate. Funds will be transferred to your wallet instantly.',
               icon: Icons.account_balance_wallet,
               color: Colors.red,
-              target: metalType == 'silver' ? const SilverScreen(initialIsBuy: false) : const SellGoldScreen(),
+              target: metalType == 'silver' ? const SellSilverScreen() : const SellGoldScreen(),
             ).animate().slideX(delay: 200.ms),
           ],
         ),

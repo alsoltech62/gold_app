@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
@@ -45,6 +47,20 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 40),
               _buildListTile(Icons.history, 'Transaction History', () {
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TransactionListScreen()));
+              }),
+              _buildListTile(Icons.card_giftcard, 'Refer & Earn (Copy Code)', () {
+                Clipboard.setData(ClipboardData(text: user['mobile'] ?? ''));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Referral code copied to clipboard!'),
+                  backgroundColor: Colors.green,
+                ));
+              }),
+              _buildListTile(Icons.share, 'Share Referral Link', () {
+                final mobile = user['mobile'] ?? '';
+                Share.share(
+                  'Join Gold Savings and start investing in digital gold & silver!\nUse my referral code: $mobile\nhttps://gold.foodpulse.in/signup?ref=$mobile',
+                  subject: 'Join Gold Savings',
+                );
               }),
               _buildListTile(Icons.help_outline, 'Support', () {
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupportScreen()));

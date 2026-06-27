@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../providers/gold_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../gold/lock_in_modal.dart';
 
 class SilverScreen extends StatefulWidget {
@@ -14,45 +16,89 @@ class SilverScreen extends StatefulWidget {
 
 class _SilverScreenState extends State<SilverScreen> {
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _gramsController = TextEditingController();
   String _paymentMethod = 'UPI';
-  bool _isBuy = true;
+  late Razorpay _razorpay;
+  bool _isProcessingPayment = false;
 
   @override
   void initState() {
     super.initState();
-    _isBuy = widget.initialIsBuy;
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<GoldProvider>(context, listen: false).fetchSilverRate();
     });
   }
 
+  @override
+  void dispose() {
+    _razorpay.clear();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    final provider = Provider.of<GoldProvider>(context, listen: false);
+    final amount = double.tryParse(_amountController.text) ?? 0;
+    
+    final result = await provider.buySilver(
+      amount, 
+      'UPI', 
+      paymentId: response.paymentId ?? '',
+      razorpayOrderId: response.orderId,
+      razorpaySignature: response.signature,
+    );
+    
+    setState(() => _isProcessingPayment = false);
+    
+    if (!mounted) return;
+    
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silver purchased successfully!')));
+      LockInModal.show(
+        context: context,
+        title: 'Increase Your Returns with Lock-In Investment',
+        message: 'If you want, you can get additional returns by locking your silver for a specific period.',
+        primaryActionText: 'Lock Now',
+        secondaryActionText: 'Skip & Continue',
+        metalType: 'silver',
+        onSecondaryAction: () => Navigator.of(context).pop(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Verification failed.'), backgroundColor: Colors.red));
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    setState(() => _isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message}'), backgroundColor: Colors.red),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    setState(() => _isProcessingPayment = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('External Wallet Selected: ${response.walletName}')),
+    );
+  }
+
   void _handleTransaction() async {
     final provider = Provider.of<GoldProvider>(context, listen: false);
-    Map<String, dynamic> result = {};
 
-    if (_isBuy) {
-      final amount = double.tryParse(_amountController.text) ?? 0;
-      if (amount < 100) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimum amount is ₹100')));
-        return;
-      }
-      result = await provider.buySilver(amount, _paymentMethod);
-    } else {
-      final grams = double.tryParse(_gramsController.text) ?? 0;
-      if (grams <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
-        return;
-      }
-      result = await provider.sellSilver(grams);
+    final amount = double.tryParse(_amountController.text) ?? 0;
+    if (amount < 100) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimum amount is ₹100')));
+      return;
     }
-
-    if (!mounted) return;
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_isBuy ? 'Silver purchased successfully!' : 'Silver sold successfully!')));
-      
-      if (_isBuy) {
+    
+    if (_paymentMethod != 'UPI') {
+      Map<String, dynamic> result = await provider.buySilver(amount, _paymentMethod, paymentId: 'WALLET_TXN');
+      if (!mounted) return;
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silver purchased successfully!')));
         LockInModal.show(
           context: context,
           title: 'Increase Your Returns with Lock-In Investment',
@@ -60,21 +106,47 @@ class _SilverScreenState extends State<SilverScreen> {
           primaryActionText: 'Lock Now',
           secondaryActionText: 'Skip & Continue',
           metalType: 'silver',
-          onSecondaryAction: () {
-            Navigator.of(context).pop();
-          },
+          onSecondaryAction: () => Navigator.of(context).pop(),
         );
+        _amountController.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Transaction failed.'), backgroundColor: Colors.red));
       }
+      return;
+    }
+
+    setState(() => _isProcessingPayment = true);
+    final orderRes = await provider.createPaymentOrder(amount);
+    
+    if (orderRes['success'] == true) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.user;
+      final rate = provider.silverRate?['current_rate']?['rate_per_gram'] ?? 1.0;
+      final grams = amount / rate;
       
-      _amountController.clear();
-      _gramsController.clear();
+      final orderData = orderRes['data'];
+      var options = {
+        'key': orderData['key'],
+        'amount': orderData['amount'],
+        'name': 'SilverVault',
+        'description': 'Purchase of ${grams.toStringAsFixed(4)}g Silver',
+        'order_id': orderData['order_id'],
+        'prefill': {
+          'contact': user?['mobile'] ?? '',
+          'name': user?['name'] ?? '',
+        },
+        'theme': {'color': '#9CA3AF'}
+      };
+      
+      try {
+        _razorpay.open(options);
+      } catch (e) {
+        setState(() => _isProcessingPayment = false);
+        debugPrint('Error: $e');
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Transaction failed'),
-          backgroundColor: Colors.orange.shade800,
-        ),
-      );
+      setState(() => _isProcessingPayment = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create payment order.'), backgroundColor: Colors.red));
     }
   }
 
@@ -127,74 +199,37 @@ class _SilverScreenState extends State<SilverScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isBuy ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
-                          foregroundColor: _isBuy ? Colors.black : Colors.white,
-                        ),
-                        onPressed: () => setState(() => _isBuy = true),
-                        child: const Text('BUY SILVER'),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: !_isBuy ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
-                          foregroundColor: !_isBuy ? Colors.black : Colors.white,
-                        ),
-                        onPressed: () => setState(() => _isBuy = false),
-                        child: const Text('SELL SILVER'),
-                      ),
-                    ),
-                  ],
+                TextField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (INR)',
+                    prefixText: '₹ ',
+                  ),
                 ),
-                const SizedBox(height: 30),
-                if (_isBuy) ...[
-                  TextField(
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount (INR)',
-                      prefixText: '₹ ',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  DropdownButtonFormField<String>(
-                    value: _paymentMethod,
-                    decoration: const InputDecoration(labelText: 'Payment Method'),
-                    items: const [
-                      DropdownMenuItem(value: 'UPI', child: Text('Direct (UPI / Bank)')),
-                      DropdownMenuItem(value: 'inr_wallet', child: Text('INR Wallet Balance')),
-                      DropdownMenuItem(value: 'japsan_wallet', child: Text('Japsan Wallet Balance')),
-                      DropdownMenuItem(value: 'gold_wallet', child: Text('Gold Wallet (Sell Gold to Buy Silver)')),
-                    ],
-                    onChanged: (val) => setState(() => _paymentMethod = val!),
-                  ),
-                ] else ...[
-                  TextField(
-                    controller: _gramsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount (Grams)',
-                      suffixText: ' gms',
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  value: _paymentMethod,
+                  decoration: const InputDecoration(labelText: 'Payment Method'),
+                  items: const [
+                    DropdownMenuItem(value: 'UPI', child: Text('Direct (UPI / Bank)')),
+                    DropdownMenuItem(value: 'inr_wallet', child: Text('INR Wallet Balance')),
+                    DropdownMenuItem(value: 'japsan_wallet', child: Text('Japsan Wallet Balance')),
+                    DropdownMenuItem(value: 'gold_wallet', child: Text('Gold Wallet (Sell Gold to Buy Silver)')),
+                  ],
+                  onChanged: (val) => setState(() => _paymentMethod = val!),
+                ),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: provider.isLoading ? null : _handleTransaction,
+                  onPressed: (provider.isLoading || _isProcessingPayment) ? null : _handleTransaction,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     backgroundColor: const Color(0xFFE0E0E0),
                     foregroundColor: Colors.black,
                   ),
-                  child: provider.isLoading 
+                  child: (provider.isLoading || _isProcessingPayment)
                     ? const CircularProgressIndicator(color: Colors.black)
-                    : Text(_isBuy ? 'PROCEED TO BUY' : 'PROCEED TO SELL'),
+                    : const Text('PROCEED TO BUY'),
                 ),
               ],
             ),

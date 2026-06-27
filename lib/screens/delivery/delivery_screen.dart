@@ -114,7 +114,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Redeemable Balance', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('${balance.toStringAsFixed(4)} gms', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+                  Text('${balance.toStringAsFixed(4)} gms', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: widget.metalType == 'silver' ? Colors.grey.shade300 : const Color(0xFFFFD700))),
                 ],
               ),
             ),
@@ -210,7 +210,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${d['gold_grams']}g Shipment', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Text('${d['gold_grams'] ?? d['grams']}g Shipment', style: const TextStyle(fontWeight: FontWeight.bold)),
                               Text(d['created_at'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                               if (d['metal_type'] != null) Text(d['metal_type'].toString().toUpperCase(), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                             ],

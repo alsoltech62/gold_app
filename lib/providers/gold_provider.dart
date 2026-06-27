@@ -179,15 +179,19 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> buyGold(double amountInr, String paymentMethod, String paymentId) async {
+  Future<Map<String, dynamic>> buyGold(double amountInr, String paymentMethod, String paymentId, {String? razorpayOrderId, String? razorpaySignature}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/gold/buy.php', {
+      final body = {
         'amount_inr': amountInr,
         'payment_method': paymentMethod,
         'payment_id': paymentId,
-      });
+      };
+      if (razorpayOrderId != null) body['razorpay_order_id'] = razorpayOrderId;
+      if (razorpaySignature != null) body['razorpay_signature'] = razorpaySignature;
+      
+      final response = await _apiClient.post('/api/gold/buy.php', body);
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
@@ -221,14 +225,19 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> buySilver(double amountInr, String paymentMethod) async {
+  Future<Map<String, dynamic>> buySilver(double amountInr, String paymentMethod, {String? paymentId, String? razorpayOrderId, String? razorpaySignature}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/silver/buy.php', {
+      final body = {
         'amount_inr': amountInr,
         'payment_method': paymentMethod,
-      });
+      };
+      if (paymentId != null) body['payment_id'] = paymentId;
+      if (razorpayOrderId != null) body['razorpay_order_id'] = razorpayOrderId;
+      if (razorpaySignature != null) body['razorpay_signature'] = razorpaySignature;
+
+      final response = await _apiClient.post('/api/silver/buy.php', body);
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
@@ -318,6 +327,23 @@ class GoldProvider with ChangeNotifier {
       if (response['success'] == true) {
         await fetchDashboard();
       }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error'};
+    }
+  }
+
+  Future<Map<String, dynamic>> createPaymentOrder(double amountInr) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/payment/create_order.php', {
+        'amount_inr': amountInr,
+      });
+      _isLoading = false;
       notifyListeners();
       return response;
     } catch (e) {
