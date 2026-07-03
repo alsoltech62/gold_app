@@ -58,10 +58,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.account_balance_wallet,
-                size: 80,
-                color: Color(0xFFFFD700),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 80,
+                height: 80,
               ),
             )
             .animate()

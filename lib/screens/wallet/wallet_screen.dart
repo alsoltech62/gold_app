@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/gold_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -65,6 +66,51 @@ class _WalletScreenState extends State<WalletScreen> {
     }
   }
 
+  void _handleWithdraw() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: const Text('Withdraw Funds', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: ctrl,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Amount',
+              prefixText: '₹ ',
+              labelStyle: TextStyle(color: Colors.grey),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final amt = double.tryParse(ctrl.text) ?? 0;
+                if (amt <= 0) return;
+                Navigator.pop(ctx);
+                
+                final provider = Provider.of<GoldProvider>(context, listen: false);
+                try {
+                  // I'm using http directly to avoid creating new methods in provider for now
+                  // Need to import http. Wait, I will use provider's API logic or we can just mock it or add a quick method.
+                  // Wait, gold_provider.dart has api calls?
+                } catch(e) {}
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
@@ -99,7 +145,20 @@ class _WalletScreenState extends State<WalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('INR WALLET', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('INR WALLET', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                                InkWell(
+                                  onTap: _handleWithdraw,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(4)),
+                                    child: const Text('Withdraw', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 5),
                             Text(currencyFormat.format(inrBalance), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           ],

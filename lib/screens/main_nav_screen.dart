@@ -5,6 +5,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'silver/silver_screen.dart';
 import 'wallet/wallet_screen.dart';
 import 'profile/profile_screen.dart';
+import 'refer_screen.dart'; // We will create this
 
 class MainNavScreen extends StatefulWidget {
   const MainNavScreen({super.key});
@@ -20,7 +21,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
     const DashboardScreen(),
     const SilverScreen(),
     const WalletScreen(),
-    const ProfileScreen(),
+    const ReferScreen(), // Fixed Refer screen
+    const ProfileScreen(), // Profile
   ];
 
   @override
@@ -54,6 +56,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.account_balance_wallet),
               label: 'Wallet & SIP',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.card_giftcard),
+              label: 'Refer',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
