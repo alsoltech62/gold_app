@@ -28,7 +28,7 @@ class _ReferScreenState extends State<ReferScreen> {
     try {
       final token = context.read<AuthProvider>().token;
       final response = await http.get(
-        Uri.parse('https://gold.alsoltech.in/api/user/referral_stats.php'),
+        Uri.parse('https://goldpay.odofast.in/api/user/referral_stats.php'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -92,7 +92,7 @@ class _ReferScreenState extends State<ReferScreen> {
                       ),
                     ],
                   ),
-                  const Text('Share this code with friends and earn Silver bonus when they deposit funds.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const Text('Share this code! They get 50 JC on signup, and you get 500 JC when they buy ₹1000 Gold/Silver.', style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
             ),
@@ -124,8 +124,8 @@ class _ReferScreenState extends State<ReferScreen> {
                       children: [
                         const Icon(Icons.diamond, color: Colors.purple, size: 32),
                         const SizedBox(height: 8),
-                        Text('${_totalSilverBonus.toStringAsFixed(2)}g', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                        const Text('Silver Bonus', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text('${_totalSilverBonus.toStringAsFixed(0)} JC', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const Text('JC Bonus', style: TextStyle(color: Colors.grey, fontSize: 12)),
                       ],
                     ),
                   ),
