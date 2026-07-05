@@ -292,6 +292,26 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
+  Future<Map<String, dynamic>> withdrawFunds(double amount) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/user/withdraw.php', {
+        'amount': amount,
+      });
+      _isLoading = false;
+      if (response['success'] == true) {
+        await fetchDashboard();
+      }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error'};
+    }
+  }
+
   Future<Map<String, dynamic>> updateSipSettings(bool active, double amount, String frequency) async {
     _isLoading = true;
     notifyListeners();

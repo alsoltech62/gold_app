@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static const String baseUrl =
-      'https://goldpay.odofast.in'; // Update with actual URL
+      'https://goldpay.odofast.in/backend'; // Update with actual URL
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

@@ -74,18 +74,53 @@ class _WalletScreenState extends State<WalletScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
           title: const Text('Withdraw Funds', style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: ctrl,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              labelText: 'Amount',
-              prefixText: '₹ ',
-              labelStyle: TextStyle(color: Colors.grey),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-            ),
+          content: Consumer<AuthProvider>(
+            builder: (ctx2, authProv, _) {
+              final user = authProv.user;
+              final hasBankDetails = user != null && user['account_number'] != null && user['account_number'].toString().isNotEmpty;
+              
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: ctrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '₹ ',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Withdraw to Bank', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  if (hasBankDetails)
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Bank: ${user['bank_name']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          Text('A/C: ${user['account_number']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          Text('IFSC: ${user['ifsc_code']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          Text('Name: ${user['account_holder_name']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        ],
+                      ),
+                    )
+                  else
+                    const Text('Please update your bank details in the Profile section.', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                ],
+              );
+            }
           ),
-          actions: [
+              actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -94,14 +129,25 @@ class _WalletScreenState extends State<WalletScreen> {
               onPressed: () async {
                 final amt = double.tryParse(ctrl.text) ?? 0;
                 if (amt <= 0) return;
+                
+                final auth = Provider.of<AuthProvider>(context, listen: false).user;
+                if (auth == null || auth['account_number'] == null || auth['account_number'].toString().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please update your bank details in the Profile section before withdrawing.')));
+                  Navigator.pop(ctx);
+                  return;
+                }
+                
                 Navigator.pop(ctx);
                 
                 final provider = Provider.of<GoldProvider>(context, listen: false);
-                try {
-                  // I'm using http directly to avoid creating new methods in provider for now
-                  // Need to import http. Wait, I will use provider's API logic or we can just mock it or add a quick method.
-                  // Wait, gold_provider.dart has api calls?
-                } catch(e) {}
+                final res = await provider.withdrawFunds(amt);
+                if (mounted) {
+                  if (res['success'] == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Withdrawal request submitted successfully')));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Withdrawal failed')));
+                  }
+                }
               },
               child: const Text('Confirm'),
             ),
@@ -149,14 +195,6 @@ class _WalletScreenState extends State<WalletScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text('INR WALLET', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                                InkWell(
-                                  onTap: _handleWithdraw,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(4)),
-                                    child: const Text('Withdraw', style: TextStyle(fontSize: 10, color: Colors.white)),
-                                  ),
-                                ),
                               ],
                             ),
                             const SizedBox(height: 5),
@@ -206,10 +244,66 @@ class _WalletScreenState extends State<WalletScreen> {
                   decoration: const InputDecoration(labelText: 'Amount', prefixText: '₹ '),
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: provider.isLoading ? null : _handleDeposit,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15)),
-                  child: const Text('DEPOSIT'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: provider.isLoading ? null : _handleDeposit,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                        ),
+                        child: const Text('DEPOSIT', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: provider.isLoading ? null : _handleWithdraw,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          side: const BorderSide(color: Colors.white30),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('WITHDRAW', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
+                          children: [
+                            TextSpan(text: 'Deposit: ', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                            TextSpan(text: 'Add funds to your wallet. When your INR balance reaches ₹1,000, it automatically converts into Digital Gold to secure your savings.'),
+                          ]
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
+                          children: [
+                            TextSpan(text: 'Withdraw: ', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                            TextSpan(text: 'Transfer your available INR balance directly to your registered bank account.'),
+                          ]
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 40),

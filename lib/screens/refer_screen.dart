@@ -28,15 +28,15 @@ class _ReferScreenState extends State<ReferScreen> {
     try {
       final token = context.read<AuthProvider>().token;
       final response = await http.get(
-        Uri.parse('https://goldpay.odofast.in/api/user/referral_stats.php'),
+        Uri.parse('https://goldpay.odofast.in/backend/api/user/referral_stats.php'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       final data = json.decode(response.body);
       if (data['success']) {
         setState(() {
-          _totalReferrals = data['data']['total_referrals'] ?? 0;
-          _totalSilverBonus = (data['data']['total_silver_bonus'] ?? 0).toDouble();
+          _totalReferrals = int.tryParse(data['data']['total_referrals']?.toString() ?? '0') ?? 0;
+          _totalSilverBonus = double.tryParse(data['data']['total_silver_bonus']?.toString() ?? '0') ?? 0.0;
           _referredUsers = data['data']['referred_users'] ?? [];
         });
       }

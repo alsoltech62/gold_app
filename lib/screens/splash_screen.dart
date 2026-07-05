@@ -62,6 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 'assets/images/logo.png',
                 width: 80,
                 height: 80,
+                color: const Color(0xFFFFD700),
               ),
             )
             .animate()

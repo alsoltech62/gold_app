@@ -21,8 +21,20 @@ class AuthProvider with ChangeNotifier {
     _token = prefs.getString('auth_token');
     if (_token != null) {
       _isAuthenticated = true;
-      // Optionally fetch user profile to verify token
       notifyListeners();
+      await fetchUser();
+    }
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      final response = await _apiClient.get('/api/user/profile.php');
+      if (response['success'] == true) {
+        _user = response['data'];
+        notifyListeners();
+      }
+    } catch (e) {
+      print('DEBUG: Error fetching user: $e');
     }
   }
 

@@ -10,6 +10,7 @@ import 'about_screen.dart';
 import 'privacy_screen.dart';
 import 'returns_screen.dart';
 import 'terms_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -45,6 +46,9 @@ class ProfileScreen extends StatelessWidget {
                 style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 40),
+              _buildListTile(Icons.edit, 'Edit Profile', () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+              }),
               _buildListTile(Icons.history, 'Transaction History', () {
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TransactionListScreen()));
               }),

@@ -132,7 +132,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
       var options = {
         'key': orderData['key'],
         'amount': orderData['amount'],
-        'name': 'GoldVault',
+        'name': 'goldbarpay',
         'description': 'Purchase of ${_grams.toStringAsFixed(4)}g 24K Gold',
         'order_id': orderData['order_id'],
         'prefill': {

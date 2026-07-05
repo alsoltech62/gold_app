@@ -30,24 +30,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final goldProvider = Provider.of<GoldProvider>(context, listen: false);
       goldProvider.fetchDashboard();
       goldProvider.fetchCurrentRate();
+      goldProvider.fetchSilverRate();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
-    
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text('GOLD SAVINGS'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
+        title: Container(
+          width: 50,
+          height: 50,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+          ),
+          child: Image.asset(
+            'assets/images/logo1.png',
+            fit: BoxFit.contain,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active),
-            color: const Color(0xFFFFD700),
+            icon: const Icon(
+              Icons.notifications_active_outlined,
+              color: Color(0xFFFFD700),
+            ),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen())
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
               );
             },
           ),
@@ -57,38 +73,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Consumer<GoldProvider>(
         builder: (context, gold, child) {
           if (gold.isLoading && gold.dashboardData == null) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+            );
           }
 
           final data = gold.dashboardData ?? {};
-          final rate = gold.currentRate ?? {};
+          final totalGold =
+              double.tryParse(data['total_gold_grams']?.toString() ?? '0') ??
+              0.0;
+          final totalSilver =
+              double.tryParse(data['total_silver_grams']?.toString() ?? '0') ??
+              0.0;
+
+          final goldRate =
+              double.tryParse(
+                gold.currentRate?['rate_per_gram']?.toString() ?? '0',
+              ) ??
+              0.0;
+          final silverRate =
+              double.tryParse(
+                gold.silverRate?['rate_per_gram']?.toString() ?? '0',
+              ) ??
+              0.0;
+
+          var currentGoldValue =
+              double.tryParse(data['current_value_inr']?.toString() ?? '0') ??
+              0.0;
+          if (currentGoldValue <= 0.0) currentGoldValue = totalGold * goldRate;
+
+          var currentSilverValue =
+              double.tryParse(
+                data['current_silver_value_inr']?.toString() ?? '0',
+              ) ??
+              0.0;
+          if (currentSilverValue <= 0.0)
+            currentSilverValue = totalSilver * silverRate;
 
           return RefreshIndicator(
             onRefresh: () async {
               await gold.fetchDashboard();
               await gold.fetchCurrentRate();
+              await gold.fetchSilverRate();
             },
             color: const Color(0xFFFFD700),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildGoldRateCard(rate),
-                  const SizedBox(height: 25),
-                  _buildBalanceSection(data, currencyFormat),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'Quick Actions',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 20),
+                  _buildBanner(data),
+                  const SizedBox(height: 16),
+                  _buildStatsGrid(
+                    currentGoldValue.toStringAsFixed(2),
+                    currentSilverValue.toStringAsFixed(2),
+                    totalGold.toStringAsFixed(4),
+                    totalSilver.toStringAsFixed(4),
                   ),
-                  const SizedBox(height: 15),
-                  _buildQuickActions(context),
-                  const SizedBox(height: 30),
-                  _buildRecentActivityHeader(context),
-                  const SizedBox(height: 15),
-                  _buildRecentActivityList(),
+                  const SizedBox(height: 16),
+                  _buildActionSection(context),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -98,199 +142,431 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildGoldRateCard(Map<String, dynamic> rate) {
-    final rateValue = rate['rate_per_gram'] ?? 0.0;
-    final change = rate['change'] ?? 0.0;
-    final isUp = change >= 0;
+  String _getImageUrl(String path) {
+    if (path.startsWith('http')) return path;
+    const baseUrl = 'https://goldpay.odofast.in/backend';
+    return '$baseUrl/$path';
+  }
+
+  Widget _buildBanner(Map<String, dynamic> data) {
+    final banners = data['banners'] as List<dynamic>? ?? [];
+    if (banners.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      height: 120,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E1E1E), Color(0xFF121212)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 2,
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('TODAY\'S RATE (24K)', style: TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 1.2)),
-              const SizedBox(height: 5),
-              Text(
-                '₹${rateValue.toStringAsFixed(2)}/gm',
-                style: const TextStyle(color: Color(0xFFFFD700), fontSize: 22, fontWeight: FontWeight.bold),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: PageView.builder(
+          itemCount: banners.length,
+          itemBuilder: (context, index) {
+            final banner = banners[index];
+            final imageUrl = _getImageUrl(banner['image_url']);
+            return Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              errorBuilder: (ctx, err, stack) => const Center(
+                child: Icon(Icons.broken_image, color: Colors.white54),
               ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: isUp ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isUp ? Icons.trending_up : Icons.trending_down,
-                  color: isUp ? Colors.green : Colors.red,
-                  size: 16,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${isUp ? '+' : ''}${change.toStringAsFixed(2)}',
-                  style: TextStyle(color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildBalanceSection(Map<String, dynamic> data, NumberFormat format) {
-    final totalGold = data['total_gold_grams'] ?? 0.0;
-    final currentValue = data['current_value_inr'] ?? 0.0;
-    final totalInvested = data['total_invested_inr'] ?? 0.0;
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'TOTAL GOLD',
-                '${totalGold.toStringAsFixed(4)} gms',
-                Icons.stars,
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: _buildStatCard(
-                'CURRENT VALUE',
-                format.format(currentValue),
-                Icons.account_balance_wallet,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-        _buildStatCard(
-          'TOTAL INVESTED',
-          format.format(totalInvested),
-          Icons.payments,
-          fullWidth: true,
-        ),
-      ],
+  Widget _buildStatsGrid(
+    String goldVal,
+    String silverVal,
+    String totalGold,
+    String totalSilver,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 1.1,
+        children: [
+          _buildStatCard(
+            'CURRENT VALUE\n(GOLD)',
+            goldVal,
+            Icons.trending_up,
+            'Rs',
+          ),
+          _buildStatCard(
+            'CURRENT VALUE\n(SILVER)',
+            silverVal,
+            Icons.trending_up,
+            'Rs',
+          ),
+          _buildStatCard(
+            'TOTAL GOLD\nINVESTED',
+            totalGold,
+            Icons.monetization_on,
+            'gms',
+          ),
+          _buildStatCard(
+            'TOTAL SILVER\nINVESTED',
+            totalSilver,
+            Icons.view_agenda,
+            'gms',
+          ),
+        ],
+      ),
     ).animate().fadeIn(delay: 200.ms);
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, {bool fullWidth = false}) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    String unit,
+  ) {
     return Container(
-      width: fullWidth ? double.infinity : null,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFFFFD700), size: 20),
-          const SizedBox(height: 15),
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 11, letterSpacing: 1)),
-          const SizedBox(height: 5),
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFFFFD700), size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Color(0xFFFFD700),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            unit,
+            style: const TextStyle(color: Color(0xFFFFD700), fontSize: 14),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
+  Widget _buildActionSection(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+      ),
       child: Row(
         children: [
-          _buildActionItem(context, 'BUY', Icons.add_shopping_cart, action: ActionType.buy),
-          const SizedBox(width: 25),
-          _buildActionItem(context, 'SELL', Icons.sell, action: ActionType.sell),
-          const SizedBox(width: 25),
-          _buildActionItem(context, 'LOCK IN', Icons.lock_clock, action: ActionType.lockIn),
-          const SizedBox(width: 25),
-          _buildActionItem(context, 'DELIVERY', Icons.local_shipping, action: ActionType.delivery),
-          const SizedBox(width: 25),
-          _buildActionItem(context, 'HISTORY', Icons.history, target: const TransactionListScreen()),
+          Expanded(
+            child: Column(
+              children: [
+                // Gold Row
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFFFD700)),
+                      ),
+                      child: const Icon(
+                        Icons.widgets,
+                        color: Color(0xFFFFD700),
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'GOLD',
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                          ),
+                          Text(
+                            '(24K)',
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontSize: 9,
+                            ),
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildActionButton(
+                      'BUY',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BuyFlowScreen(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildIconActionButton(
+                      Icons.sync,
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LockInScreen(metalType: 'gold'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildActionButton(
+                      'SELL',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SellFlowScreen(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Silver Row
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: const Icon(
+                        Icons.widgets,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SILVER',
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                          ),
+                          Text(
+                            '(999)',
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontSize: 9,
+                            ),
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildActionButton(
+                      'BUY',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SilverScreen()),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildIconActionButton(
+                      Icons.sync,
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const LockInScreen(metalType: 'silver'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _buildActionButton(
+                      'SELL',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const SellFlowScreen(metalType: 'silver'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 100,
+            color: const Color(0xFFFFD700).withOpacity(0.3),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TransactionListScreen(),
+                  ),
+                ),
+                child: const Column(
+                  children: [
+                    Text(
+                      'HISTORY',
+                      style: TextStyle(
+                        color: Color(0xFFFFD700),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Icon(
+                      Icons.calendar_month,
+                      color: Color(0xFFFFD700),
+                      size: 28,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => _showMetalSelectionDialog(context),
+                child: const Column(
+                  children: [
+                    Text(
+                      'DELIVERY',
+                      style: TextStyle(
+                        color: Color(0xFFFFD700),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Icon(
+                      Icons.local_shipping,
+                      color: Color(0xFFFFD700),
+                      size: 28,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 400.ms);
   }
 
-  Widget _buildActionItem(BuildContext context, String label, IconData icon, {Widget? target, ActionType? action}) {
+  Widget _buildActionButton(String label, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {
-        if (target != null) {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
-        } else if (action != null) {
-          _showMetalSelectionDialog(context, action: action);
-        }
-      },
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
-            ),
-            child: Icon(icon, color: const Color(0xFFFFD700)),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFFFD700)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFFFD700),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-        ],
+        ),
       ),
     );
   }
 
-  void _showMetalSelectionDialog(BuildContext context, {required ActionType action}) {
-    String title = '';
-    switch (action) {
-      case ActionType.buy: title = 'Select Metal to Buy'; break;
-      case ActionType.sell: title = 'Select Metal to Sell'; break;
-      case ActionType.lockIn: title = 'Select Metal to Lock'; break;
-      case ActionType.delivery: title = 'Select Metal for Delivery'; break;
-    }
+  Widget _buildIconActionButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFFFD700)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Icon(icon, color: const Color(0xFFFFD700), size: 14),
+      ),
+    );
+  }
 
+  void _showMetalSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: const Color(0xFF111111),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Colors.white10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Colors.white10),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              const Text(
+                'Select Metal for Delivery',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 24),
               Row(
@@ -299,29 +575,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: InkWell(
                       onTap: () {
                         Navigator.pop(context);
-                        Widget target;
-                        switch (action) {
-                          case ActionType.buy: target = const BuyFlowScreen(); break;
-                          case ActionType.sell: target = const SellFlowScreen(); break;
-                          case ActionType.lockIn: target = const LockInScreen(metalType: 'gold'); break;
-                          case ActionType.delivery: target = const DeliveryScreen(metalType: 'gold'); break;
-                        }
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const DeliveryScreen(metalType: 'gold'),
+                          ),
+                        );
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFD700).withOpacity(0.1),
-                          border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                          border: Border.all(
+                            color: const Color(0xFFFFD700).withOpacity(0.3),
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
+                        child: const Column(
                           children: [
-                            const Text('🥇', style: TextStyle(fontSize: 32)),
-                            const SizedBox(height: 8),
-                            const Text('Gold', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text(action == ActionType.buy ? '24K / 999' : 'Asset', style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                            Text('🥇', style: TextStyle(fontSize: 32)),
+                            SizedBox(height: 8),
+                            Text(
+                              'Gold',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Asset',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -332,29 +620,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: InkWell(
                       onTap: () {
                         Navigator.pop(context);
-                        Widget target;
-                        switch (action) {
-                          case ActionType.buy: target = const SilverScreen(); break;
-                          case ActionType.sell: target = const SellFlowScreen(metalType: 'silver'); break; 
-                          case ActionType.lockIn: target = const LockInScreen(metalType: 'silver'); break;
-                          case ActionType.delivery: target = const DeliveryScreen(metalType: 'silver'); break;
-                        }
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const DeliveryScreen(metalType: 'silver'),
+                          ),
+                        );
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.blue.withOpacity(0.1),
-                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.3),
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
+                        child: const Column(
                           children: [
-                            const Text('🥈', style: TextStyle(fontSize: 32)),
-                            const SizedBox(height: 8),
-                            const Text('Silver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            const Text('Asset', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                            Text('🥈', style: TextStyle(fontSize: 32)),
+                            SizedBox(height: 8),
+                            Text(
+                              'Silver',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Asset',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -367,112 +667,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.white10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Colors.white10),
+                  ),
                 ),
-                child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildRecentActivityHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          'Recent Activity',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TransactionListScreen()));
-          },
-          child: const Text('See All', style: TextStyle(color: Color(0xFFFFD700))),
-        ),
-      ],
-    ).animate().fadeIn(delay: 600.ms);
-  }
-
-  Widget _buildRecentActivityList() {
-    return Consumer<GoldProvider>(
-      builder: (context, gold, child) {
-        final txns = gold.transactions.take(5).toList();
-        if (txns.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('No recent transactions', style: TextStyle(color: Colors.grey)),
-            ),
-          );
-        }
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: txns.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final txn = txns[index];
-            return Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: txn['type'] == 'buy' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      txn['type'] == 'buy' ? Icons.call_made : Icons.call_received,
-                      color: txn['type'] == 'buy' ? Colors.green : Colors.red,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          txn['type'] == 'buy' ? 'Purchased Gold' : 'Sold Gold',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          txn['date'] ?? '',
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${txn['type'] == 'buy' ? '+' : '-'}${txn['gold_grams']} gms',
-                        style: TextStyle(
-                          color: txn['type'] == 'buy' ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '₹${txn['amount_inr']}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    ).animate().fadeIn(delay: 800.ms);
   }
 }
