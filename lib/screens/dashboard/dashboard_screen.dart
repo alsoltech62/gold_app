@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/gold_provider.dart';
 import '../gold/buy_flow_screen.dart';
 import '../gold/sell_flow_screen.dart';
+import '../silver/silver_screen.dart';
+import '../silver/buy_silver_flow_screen.dart';
 import '../transactions/transaction_list_screen.dart';
-import '../delivery/delivery_screen.dart';
 import '../notifications_screen.dart';
-import '../silver/silver_screen.dart';
-import '../silver/silver_screen.dart';
-import '../gold/lock_in_screen.dart';
-
-enum ActionType { buy, sell, lockIn, delivery }
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,38 +28,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  String formatINR(dynamic value) {
+    if (value == null) return '0';
+    double numVal = double.tryParse(value.toString()) ?? 0.0;
+    return NumberFormat('#,##,###.##').format(numVal);
+  }
+
+  String formatGrams(dynamic value) {
+    if (value == null) return '0.000';
+    double numVal = double.tryParse(value.toString()) ?? 0.0;
+    return numVal.toStringAsFixed(3);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF070707),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF070707),
         elevation: 0,
         centerTitle: true,
         title: Container(
-          width: 50,
-          height: 50,
+          width: 48,
+          height: 48,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+            border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+            color: Colors.black,
           ),
-          child: Image.asset(
-            'assets/images/logo1.png',
-            fit: BoxFit.contain,
-          ),
+          child: Image.asset('assets/images/GoldBarPay.png', fit: BoxFit.contain),
         ),
         actions: [
           IconButton(
             icon: const Icon(
-              Icons.notifications_active_outlined,
-              color: Color(0xFFFFD700),
+              Icons.notifications_none,
+              color: Color(0xFFD4AF37),
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -74,65 +77,506 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context, gold, child) {
           if (gold.isLoading && gold.dashboardData == null) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+              child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
             );
           }
 
           final data = gold.dashboardData ?? {};
-          final totalGold =
-              double.tryParse(data['total_gold_grams']?.toString() ?? '0') ??
-              0.0;
-          final totalSilver =
-              double.tryParse(data['total_silver_grams']?.toString() ?? '0') ??
-              0.0;
+          final totalGold = data['total_gold_grams'] ?? 0;
+          final totalSilver = data['total_silver_grams'] ?? 0;
+          final goldRate = gold.currentRate?['rate_per_gram'] ?? 0;
+          final silverRate = gold.silverRate?['rate_per_gram'] ?? 0;
+          final currentGoldValue = data['gold_current_value'] ?? 0;
+          final currentSilverValue = data['silver_current_value'] ?? 0;
+          final totalValue = data['current_value_inr'] ?? 0;
 
-          final goldRate =
-              double.tryParse(
-                gold.currentRate?['rate_per_gram']?.toString() ?? '0',
-              ) ??
-              0.0;
-          final silverRate =
-              double.tryParse(
-                gold.silverRate?['rate_per_gram']?.toString() ?? '0',
-              ) ??
-              0.0;
-
-          var currentGoldValue =
-              double.tryParse(data['current_value_inr']?.toString() ?? '0') ??
-              0.0;
-          if (currentGoldValue <= 0.0) currentGoldValue = totalGold * goldRate;
-
-          var currentSilverValue =
-              double.tryParse(
-                data['current_silver_value_inr']?.toString() ?? '0',
-              ) ??
-              0.0;
-          if (currentSilverValue <= 0.0)
-            currentSilverValue = totalSilver * silverRate;
+          final pl =
+              double.tryParse(data['profit_loss_inr']?.toString() ?? '0') ?? 0;
+          final totalInv =
+              double.tryParse(data['total_invested_inr']?.toString() ?? '0') ??
+              0;
+          final plPercentage = totalInv > 0
+              ? ((pl / totalInv) * 100).toStringAsFixed(2)
+              : '0.00';
 
           return RefreshIndicator(
+            color: const Color(0xFFD4AF37),
             onRefresh: () async {
               await gold.fetchDashboard();
               await gold.fetchCurrentRate();
               await gold.fetchSilverRate();
             },
-            color: const Color(0xFFFFD700),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
-                  _buildBanner(data),
-                  const SizedBox(height: 16),
-                  _buildStatsGrid(
-                    currentGoldValue.toStringAsFixed(2),
-                    currentSilverValue.toStringAsFixed(2),
-                    totalGold.toStringAsFixed(4),
-                    totalSilver.toStringAsFixed(4),
+                  // Top Rates Bar
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121212),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFD4AF37).withOpacity(0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Text("🥇", style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "GOLD",
+                                  style: TextStyle(
+                                    color: Color(0xFFD4AF37),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "₹ ${formatINR(goldRate)} ",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "/gm",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 1,
+                          height: 30,
+                          color: const Color(0xFFD4AF37).withOpacity(0.3),
+                        ),
+                        Row(
+                          children: [
+                            const Text("🥈", style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "SILVER",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "₹ ${formatINR(silverRate)} ",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "/gm",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () {
+                            gold.fetchDashboard();
+                            gold.fetchCurrentRate();
+                            gold.fetchSilverRate();
+                          },
+                          child: const Icon(
+                            Icons.sync,
+                            color: Color(0xFFD4AF37),
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  _buildActionSection(context),
-                  const SizedBox(height: 40),
+
+                  // Promo Banner
+                  Container(
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF111111),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFD4AF37).withOpacity(0.3),
+                      ),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/jewelry_banner.png'),
+                        fit: BoxFit.cover,
+                        opacity: 0.7,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.black.withOpacity(0.9),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                "Invest in Precious\nMetals, Secure\nYour Future",
+                                style: TextStyle(
+                                  color: Color(0xFFD4AF37),
+                                  fontSize: 16,
+                                  fontFamily: 'serif',
+                                  height: 1.2,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "Start Your Investment Today",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 4.0),
+                            child: Icon(
+                              Icons.chevron_left,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Icon(
+                              Icons.chevron_right,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 16,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD4AF37),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white30,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white30,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white30,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Grid Stats
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          "🥇",
+                          "TOTAL GOLD\nINVESTED",
+                          "${formatGrams(totalGold)} gm",
+                          const Color(0xFFD4AF37),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          "🥈",
+                          "TOTAL SILVER\nINVESTED",
+                          "${formatGrams(totalSilver)} gm",
+                          Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTrendCard(
+                          Icons.trending_up,
+                          const Color(0xFFD4AF37),
+                          "CURRENT GOLD\nVALUE",
+                          "₹ ${formatINR(currentGoldValue)}",
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTrendCard(
+                          Icons.trending_up,
+                          Colors.grey,
+                          "CURRENT SILVER\nVALUE",
+                          "₹ ${formatINR(currentSilverValue)}",
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Total Portfolio Value
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121212),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFD4AF37).withOpacity(0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                border: Border.all(
+                                  color: const Color(0xFFD4AF37),
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.account_balance_wallet,
+                                color: Color(0xFFD4AF37),
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              "TOTAL PORTFOLIO VALUE",
+                              style: TextStyle(
+                                color: Color(0xFFD4AF37),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 42.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "₹ ${formatINR(totalValue)}",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${pl >= 0 ? '↑' : '↓'} Today ${pl >= 0 ? 'Profit' : 'Loss'} ₹ ${formatINR(pl.abs())} ($plPercentage%)",
+                                style: TextStyle(
+                                  color: pl >= 0 ? Colors.green : Colors.red,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Quick Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionRow(
+                          "🥇",
+                          "GOLD",
+                          "24K Gold",
+                          const Color(0xFFD4AF37),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BuyFlowScreen(),
+                            ),
+                          ),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SellFlowScreen(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildActionRow(
+                          "🥈",
+                          "SILVER",
+                          "999 Silver",
+                          Colors.grey,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BuySilverFlowScreen(),
+                            ),
+                          ),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const SellFlowScreen(initialMetalType: 'silver'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Recent Transactions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "RECENT TRANSACTIONS",
+                        style: TextStyle(
+                          color: Color(0xFFD4AF37),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TransactionListScreen(),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Text(
+                              "VIEW ALL ",
+                              style: TextStyle(
+                                color: Color(0xFFD4AF37),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Color(0xFFD4AF37),
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount:
+                          (data['recent_transactions'] as List?)?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        final tx = data['recent_transactions'][index];
+                        return _buildTransactionCard(tx);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -142,544 +586,291 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  String _getImageUrl(String path) {
-    if (path.startsWith('http')) return path;
-    const baseUrl = 'https://goldpay.odofast.in/backend';
-    return '$baseUrl/$path';
-  }
-
-  Widget _buildBanner(Map<String, dynamic> data) {
-    final banners = data['banners'] as List<dynamic>? ?? [];
-    if (banners.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      height: 120,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(19),
-        child: PageView.builder(
-          itemCount: banners.length,
-          itemBuilder: (context, index) {
-            final banner = banners[index];
-            final imageUrl = _getImageUrl(banner['image_url']);
-            return Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              errorBuilder: (ctx, err, stack) => const Center(
-                child: Icon(Icons.broken_image, color: Colors.white54),
-              ),
-            );
-          },
-        ),
-      ),
-    ).animate().fadeIn().slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildStatsGrid(
-    String goldVal,
-    String silverVal,
-    String totalGold,
-    String totalSilver,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 1.1,
-        children: [
-          _buildStatCard(
-            'CURRENT VALUE\n(GOLD)',
-            goldVal,
-            Icons.trending_up,
-            'Rs',
-          ),
-          _buildStatCard(
-            'CURRENT VALUE\n(SILVER)',
-            silverVal,
-            Icons.trending_up,
-            'Rs',
-          ),
-          _buildStatCard(
-            'TOTAL GOLD\nINVESTED',
-            totalGold,
-            Icons.monetization_on,
-            'gms',
-          ),
-          _buildStatCard(
-            'TOTAL SILVER\nINVESTED',
-            totalSilver,
-            Icons.view_agenda,
-            'gms',
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 200.ms);
-  }
-
-  Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    String unit,
-  ) {
+  Widget _buildStatCard(String emoji, String title, String value, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFFFFD700), size: 24),
+              Text(emoji, style: const TextStyle(fontSize: 24)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFFFFD700),
+                  style: TextStyle(
+                    color: color,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    height: 1.5,
+                    letterSpacing: 1,
                   ),
                 ),
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           Text(
             value,
-            style: const TextStyle(
-              color: Color(0xFFFFD700),
-              fontSize: 20,
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrendCard(
+    IconData icon,
+    Color color,
+    String title,
+    String value,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121212),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white24),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
-            unit,
-            style: const TextStyle(color: Color(0xFFFFD700), fontSize: 14),
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionSection(BuildContext context) {
+  Widget _buildActionRow(
+    String emoji,
+    String title,
+    String subtitle,
+    Color color,
+    VoidCallback onBuy,
+    VoidCallback onSell,
+  ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              children: [
-                // Gold Row
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFFD700)),
-                      ),
-                      child: const Icon(
-                        Icons.widgets,
-                        color: Color(0xFFFFD700),
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'GOLD',
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                          ),
-                          Text(
-                            '(24K)',
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
-                              fontSize: 9,
-                            ),
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildActionButton(
-                      'BUY',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BuyFlowScreen(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildIconActionButton(
-                      Icons.sync,
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LockInScreen(metalType: 'gold'),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildActionButton(
-                      'SELL',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SellFlowScreen(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Silver Row
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: const Icon(
-                        Icons.widgets,
-                        color: Colors.grey,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'SILVER',
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                          ),
-                          Text(
-                            '(999)',
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
-                              fontSize: 9,
-                            ),
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildActionButton(
-                      'BUY',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SilverScreen()),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildIconActionButton(
-                      Icons.sync,
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const LockInScreen(metalType: 'silver'),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildActionButton(
-                      'SELL',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const SellFlowScreen(metalType: 'silver'),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 100,
-            color: const Color(0xFFFFD700).withOpacity(0.3),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Row(
             children: [
-              GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TransactionListScreen(),
+              Text(emoji, style: const TextStyle(fontSize: 32)),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(subtitle, style: TextStyle(color: color, fontSize: 10)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: onBuy,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "BUY",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
                   ),
                 ),
-                child: const Column(
-                  children: [
-                    Text(
-                      'HISTORY',
-                      style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Icon(
-                      Icons.calendar_month,
-                      color: Color(0xFFFFD700),
-                      size: 28,
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => _showMetalSelectionDialog(context),
-                child: const Column(
-                  children: [
-                    Text(
-                      'DELIVERY',
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: onSell,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF222222),
+                      border: Border.all(color: color.withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "SELL",
                       style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 10,
+                        color: color,
                         fontWeight: FontWeight.bold,
+                        fontSize: 10,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Icon(
-                      Icons.local_shipping,
-                      color: Color(0xFFFFD700),
-                      size: 28,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 400.ms);
-  }
-
-  Widget _buildActionButton(String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFFD700)),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFFFFD700),
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildIconActionButton(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFFD700)),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Icon(icon, color: const Color(0xFFFFD700), size: 14),
-      ),
-    );
-  }
+  Widget _buildTransactionCard(Map<String, dynamic> tx) {
+    bool isBuy = tx['type'] == 'buy';
+    bool isSell = tx['type'] == 'sell';
+    String metal = tx['metal_type']?.toString().toUpperCase() ?? 'GOLD';
+    String metalName = metal == 'GOLD' ? 'Gold' : 'Silver';
+    String amount = formatINR(tx['amount_inr']);
+    String dateStr = tx['created_at'] != null
+        ? DateFormat('MMM dd, yyyy').format(DateTime.parse(tx['created_at']))
+        : '';
 
-  void _showMetalSelectionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF111111),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Colors.white10),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    IconData iconData = isBuy
+        ? Icons.shopping_cart
+        : isSell
+        ? Icons.arrow_downward
+        : Icons.local_shipping;
+    String actionName = isBuy
+        ? 'Buy'
+        : isSell
+        ? 'Sell'
+        : 'Delivery';
+    String grams = tx['gold_grams'] != null
+        ? formatGrams(tx['gold_grams'])
+        : (tx['silver_grams'] != null ? formatGrams(tx['silver_grams']) : '0');
+
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111111),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Select Metal for Delivery',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFD4AF37).withOpacity(0.5),
+                  ),
                 ),
+                child: Icon(iconData, color: const Color(0xFFD4AF37), size: 14),
               ),
-              const SizedBox(height: 24),
-              Row(
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const DeliveryScreen(metalType: 'gold'),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFD700).withOpacity(0.1),
-                          border: Border.all(
-                            color: const Color(0xFFFFD700).withOpacity(0.3),
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Column(
-                          children: [
-                            Text('🥇', style: TextStyle(fontSize: 32)),
-                            SizedBox(height: 8),
-                            Text(
-                              'Gold',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Asset',
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  Text(
+                    "$metalName $actionName",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const DeliveryScreen(metalType: 'silver'),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          border: Border.all(
-                            color: Colors.blue.withOpacity(0.3),
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Column(
-                          children: [
-                            Text('🥈', style: TextStyle(fontSize: 32)),
-                            SizedBox(height: 8),
-                            Text(
-                              'Silver',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Asset',
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  Text(
+                    "$grams gm",
+                    style: const TextStyle(
+                      color: Color(0xFFD4AF37),
+                      fontSize: 9,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Colors.white10),
-                  ),
-                ),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            "₹ $amount",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            dateStr,
+            style: const TextStyle(color: Colors.white54, fontSize: 9),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
+            ),
+            child: const Text(
+              "Completed",
+              style: TextStyle(color: Colors.green, fontSize: 8),
+            ),
+          ),
+        ],
       ),
     );
   }

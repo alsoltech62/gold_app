@@ -4,15 +4,31 @@ import 'sell_gold_screen.dart';
 import '../silver/sell_silver_screen.dart';
 import 'lock_in_screen.dart';
 
-class SellFlowScreen extends StatelessWidget {
-  final String metalType;
-  const SellFlowScreen({super.key, this.metalType = 'gold'});
+class SellFlowScreen extends StatefulWidget {
+  final String initialMetalType;
+  const SellFlowScreen({super.key, this.initialMetalType = 'gold'});
+
+  @override
+  State<SellFlowScreen> createState() => _SellFlowScreenState();
+}
+
+class _SellFlowScreenState extends State<SellFlowScreen> {
+  late String metalType;
+
+  @override
+  void initState() {
+    super.initState();
+    metalType = widget.initialMetalType;
+  }
 
   @override
   Widget build(BuildContext context) {
+    bool isGold = metalType == 'gold';
+    Color themeColor = isGold ? const Color(0xFFFFD700) : Colors.grey;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sell ${metalType == 'silver' ? 'Silver' : 'Gold'}'),
+        title: Text('Sell ${isGold ? 'Gold' : 'Silver'}'),
         centerTitle: true,
       ),
       body: Padding(
@@ -24,14 +40,70 @@ class SellFlowScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 16),
               textAlign: TextAlign.center,
             ).animate().fadeIn(),
+            const SizedBox(height: 20),
+            
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => metalType = 'gold'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isGold ? const Color(0xFFFFD700) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: isGold ? [
+                          BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.4), blurRadius: 15)
+                        ] : [],
+                      ),
+                      child: Text(
+                        'Sell Gold',
+                        style: TextStyle(
+                          color: isGold ? Colors.black : Colors.white.withOpacity(0.4),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => metalType = 'silver'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: !isGold ? Colors.grey[300] : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: !isGold ? [
+                          BoxShadow(color: Colors.grey.withOpacity(0.4), blurRadius: 15)
+                        ] : [],
+                      ),
+                      child: Text(
+                        'Sell Silver',
+                        style: TextStyle(
+                          color: !isGold ? Colors.black : Colors.white.withOpacity(0.4),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(delay: 100.ms),
+            
             const SizedBox(height: 30),
             
             _buildOptionCard(
               context: context,
               title: 'Get up to 12% Extra',
-              subtitle: 'Instead of selling now, lock your ${metalType} in our vault for 6-36 months and earn up to 12% guaranteed extra returns.',
+              subtitle: 'Instead of selling now, lock your $metalType in our vault for 6-36 months and earn up to 12% guaranteed extra returns.',
               icon: Icons.lock,
-              color: metalType == 'silver' ? Colors.grey : const Color(0xFFFFD700),
+              color: themeColor,
               target: LockInScreen(metalType: metalType),
               isRecommended: true,
             ).animate().slideX(),
@@ -41,10 +113,10 @@ class SellFlowScreen extends StatelessWidget {
             _buildOptionCard(
               context: context,
               title: 'Sell Anyway',
-              subtitle: 'Liquidate your ${metalType} immediately at the current market rate. Funds will be transferred to your wallet instantly.',
+              subtitle: 'Liquidate your $metalType immediately at the current market rate. Funds will be transferred to your wallet instantly.',
               icon: Icons.account_balance_wallet,
               color: Colors.red,
-              target: metalType == 'silver' ? const SellSilverScreen() : const SellGoldScreen(),
+              target: isGold ? const SellGoldScreen() : const SellSilverScreen(),
             ).animate().slideX(delay: 200.ms),
           ],
         ),

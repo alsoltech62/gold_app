@@ -15,6 +15,55 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  
+  int _resendTimer = 30;
+  bool _canResend = false;
+  bool _isResending = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() {
+      _resendTimer = 30;
+      _canResend = false;
+    });
+    _tick();
+  }
+
+  void _tick() async {
+    if (!mounted) return;
+    if (_resendTimer > 0) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      setState(() => _resendTimer--);
+      _tick();
+    } else {
+      if (!mounted) return;
+      setState(() => _canResend = true);
+    }
+  }
+
+  void _handleResend() async {
+    if (!_canResend || _isResending) return;
+    setState(() => _isResending = true);
+    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.sendOtp(widget.mobile);
+    
+    if (!mounted) return;
+    setState(() => _isResending = false);
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP Resent Successfully!', style: TextStyle(color: Colors.green))));
+      _startTimer();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to resend OTP.')));
+    }
+  }
 
   void _handleVerify() async {
     if (_formKey.currentState!.validate()) {
@@ -126,15 +175,15 @@ class _OtpScreenState extends State<OtpScreen> {
                   ).animate().fadeIn(delay: 600.ms).scale(),
                   const SizedBox(height: 20),
                   Center(
-                    child: TextButton(
-                      onPressed: () {
-                        // Resend OTP logic
-                      },
-                      child: const Text(
-                        'Resend Code',
-                        style: TextStyle(color: Color(0xFFFFD700)),
-                      ),
-                    ),
+                    child: _isResending 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFFFFD700), strokeWidth: 2))
+                      : TextButton(
+                          onPressed: _canResend ? _handleResend : null,
+                          child: Text(
+                            _canResend ? 'Resend Code' : 'Resend Code in ${_resendTimer}s',
+                            style: TextStyle(color: _canResend ? const Color(0xFFFFD700) : Colors.grey),
+                          ),
+                        ),
                   ),
                 ],
               ),

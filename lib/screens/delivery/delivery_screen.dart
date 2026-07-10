@@ -4,14 +4,15 @@ import '../../providers/gold_provider.dart';
 import '../gold/lock_in_modal.dart';
 
 class DeliveryScreen extends StatefulWidget {
-  final String metalType;
-  const DeliveryScreen({super.key, this.metalType = 'gold'});
+  final String? initialMetalType;
+  const DeliveryScreen({super.key, this.initialMetalType});
 
   @override
   State<DeliveryScreen> createState() => _DeliveryScreenState();
 }
 
 class _DeliveryScreenState extends State<DeliveryScreen> {
+  late String _selectedMetal;
   final _gramsController = TextEditingController();
   final _streetController = TextEditingController();
   final _cityController = TextEditingController();
@@ -21,6 +22,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedMetal = widget.initialMetalType ?? 'gold';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final p = Provider.of<GoldProvider>(context, listen: false);
       p.fetchDeliveries();
@@ -45,29 +47,19 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
       return;
     }
 
-    LockInModal.show(
-      context: context,
-      title: 'Earn More Before Delivery',
-      message: 'If you want, you can get additional returns by locking your ${widget.metalType} for a specific period before taking delivery.',
-      primaryActionText: 'Lock & Earn More',
-      secondaryActionText: 'Continue Delivery',
-      metalType: widget.metalType,
-      onSecondaryAction: () {
-        _submitRequest(grams, street, city, state, pincode);
-      },
-    );
+    _submitRequest(grams, street, city, state, pincode);
   }
 
   void _submitRequest(double grams, String street, String city, String state, String pincode) async {
 
     final provider = Provider.of<GoldProvider>(context, listen: false);
     final address = '$street, $city, $state - $pincode';
-    final result = await provider.requestDelivery(grams, address, city, state, pincode, widget.metalType);
+    final result = await provider.requestDelivery(grams, address, city, state, pincode, _selectedMetal);
 
     if (!mounted) return;
 
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Physical ${widget.metalType} delivery request submitted!')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Physical $_selectedMetal delivery request submitted!')));
       _gramsController.clear();
       _streetController.clear();
       _cityController.clear();
@@ -86,7 +78,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<GoldProvider>(context);
-    final balance = widget.metalType == 'silver' 
+    final balance = _selectedMetal == 'silver' 
         ? (provider.dashboardData?['total_silver_grams'] ?? 0.0) 
         : (provider.dashboardData?['total_gold_grams'] ?? 0.0);
     final deliveries = provider.deliveries;
@@ -101,7 +93,17 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Request secure delivery of your ${widget.metalType == 'silver' ? '999 silver' : '24K gold'} assets', style: const TextStyle(color: Colors.grey)),
+            Text('Request secure delivery of your ${_selectedMetal == 'silver' ? '999 silver' : '24K gold'} assets', style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildMetalToggle('gold', '24K Gold'),
+                const SizedBox(width: 15),
+                _buildMetalToggle('silver', '999 Silver'),
+              ],
+            ),
             const SizedBox(height: 20),
             
             Container(
@@ -114,13 +116,13 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Redeemable Balance', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('${balance.toStringAsFixed(4)} gms', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: widget.metalType == 'silver' ? Colors.grey.shade300 : const Color(0xFFFFD700))),
+                  Text('${balance.toStringAsFixed(4)} gms', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _selectedMetal == 'silver' ? Colors.grey.shade300 : const Color(0xFFFFD700))),
                 ],
               ),
             ),
             const SizedBox(height: 30),
 
-            Text('${widget.metalType == 'silver' ? 'Silver' : 'Gold'} Quantity (min 1g)', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('${_selectedMetal == 'silver' ? 'Silver' : 'Gold'} Quantity (min 1g)', style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
               controller: _gramsController,
@@ -258,8 +260,6 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
           const SizedBox(height: 15),
           _buildChargeRow('Delivery Charge', deliveryCharge),
           const SizedBox(height: 10),
-          _buildChargeRow('Package Charge', packageCharge),
-          const SizedBox(height: 10),
           _buildChargeRow('Forwarding Charge', forwardingCharge),
           const Divider(color: Colors.white10, height: 30),
           Row(
@@ -281,6 +281,28 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
         Text('₹$amount', style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
+    );
+  }
+
+  Widget _buildMetalToggle(String type, String label) {
+    bool isSelected = _selectedMetal == type;
+    return InkWell(
+      onTap: () => setState(() => _selectedMetal = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFD4AF37) : Colors.transparent,
+          border: Border.all(color: const Color(0xFFD4AF37)),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : const Color(0xFFD4AF37),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 }

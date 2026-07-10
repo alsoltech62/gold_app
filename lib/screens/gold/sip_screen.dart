@@ -7,7 +7,8 @@ import '../../core/api_client.dart';
 import '../../providers/gold_provider.dart';
 
 class SipScreen extends StatefulWidget {
-  const SipScreen({super.key});
+  final String metalType;
+  const SipScreen({super.key, this.metalType = 'gold'});
 
   @override
   State<SipScreen> createState() => _SipScreenState();
@@ -31,13 +32,10 @@ class _SipScreenState extends State<SipScreen> {
 
   Future<void> _fetchPlans() async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiClient.baseUrl}/user/sip_plans.php'),
-      );
-      final data = jsonDecode(response.body);
-      if (data['success']) {
+      final data = await ApiClient().get('/api/user/sip_plans.php');
+      if (data['success'] == true) {
         setState(() {
-          _plans = List<Map<String, dynamic>>.from(data['data']);
+          _plans = (data['data'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
           if (_plans.isNotEmpty) {
             _selectedPlan = _plans.first;
             _amount = _selectedPlan!['min_amount'].toString();
@@ -81,6 +79,7 @@ class _SipScreenState extends State<SipScreen> {
         true,
         double.parse(_amount),
         _frequency,
+        widget.metalType,
       );
 
       if (result['success'] == true) {
@@ -91,7 +90,7 @@ class _SipScreenState extends State<SipScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        provider.fetchSipHistory();
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

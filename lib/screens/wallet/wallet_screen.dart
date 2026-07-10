@@ -16,6 +16,7 @@ class _WalletScreenState extends State<WalletScreen> {
   final TextEditingController _sipAmountController = TextEditingController();
   String _walletType = 'inr';
   String _sipFreq = 'monthly';
+  String _sipMetalType = 'gold';
   bool _sipActive = false;
 
   @override
@@ -30,6 +31,7 @@ class _WalletScreenState extends State<WalletScreen> {
             _sipActive = data['sip_active'] ?? false;
             _sipAmountController.text = (data['sip_amount'] ?? '').toString();
             _sipFreq = data['sip_frequency'] ?? 'monthly';
+            _sipMetalType = data['sip_metal_type'] ?? 'gold';
           });
         }
       });
@@ -56,7 +58,7 @@ class _WalletScreenState extends State<WalletScreen> {
   void _handleSipSave() async {
     final amount = double.tryParse(_sipAmountController.text) ?? 0;
     final provider = Provider.of<GoldProvider>(context, listen: false);
-    final res = await provider.updateSipSettings(_sipActive, amount, _sipFreq);
+    final res = await provider.updateSipSettings(_sipActive, amount, _sipFreq, _sipMetalType);
     if (mounted) {
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SIP Settings Saved')));
@@ -323,6 +325,16 @@ class _WalletScreenState extends State<WalletScreen> {
                     controller: _sipAmountController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(labelText: 'SIP Amount', prefixText: '₹ '),
+                  ),
+                  const SizedBox(height: 15),
+                  DropdownButtonFormField<String>(
+                    value: _sipMetalType,
+                    decoration: const InputDecoration(labelText: 'SIP Metal Type'),
+                    items: const [
+                      DropdownMenuItem(value: 'gold', child: Text('Gold')),
+                      DropdownMenuItem(value: 'silver', child: Text('Silver')),
+                    ],
+                    onChanged: (val) => setState(() => _sipMetalType = val!),
                   ),
                   const SizedBox(height: 15),
                   DropdownButtonFormField<String>(

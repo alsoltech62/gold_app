@@ -312,7 +312,7 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> updateSipSettings(bool active, double amount, String frequency) async {
+  Future<Map<String, dynamic>> updateSipSettings(bool active, double amount, String frequency, [String metalType = 'gold']) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -320,6 +320,7 @@ class GoldProvider with ChangeNotifier {
         'active': active ? 1 : 0,
         'amount': amount,
         'frequency': frequency,
+        'metal_type': metalType,
       });
       _isLoading = false;
       if (response['success'] == true) {

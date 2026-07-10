@@ -66,11 +66,10 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
 
   Future<void> _fetchPlans() async {
     try {
-      final response = await http.get(Uri.parse('${ApiClient.baseUrl}/lockin/plans.php?metal_type=$_currentMetalType'));
-      final data = jsonDecode(response.body);
-      if (data['success']) {
+      final data = await ApiClient().get('/api/lockin/plans.php?metal_type=$_currentMetalType');
+      if (data['success'] == true) {
         setState(() {
-          _plans = List<Map<String, dynamic>>.from(data['data']);
+          _plans = (data['data'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
         });
       }
     } catch (e) {
@@ -80,16 +79,10 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
 
   Future<void> _fetchHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      final response = await http.get(
-        Uri.parse('${ApiClient.baseUrl}/lockin/history.php'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      final data = jsonDecode(response.body);
-      if (data['success']) {
+      final data = await ApiClient().get('/api/lockin/history.php');
+      if (data['success'] == true) {
         setState(() {
-          _history = List<Map<String, dynamic>>.from(data['data']);
+          _history = (data['data'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
         });
       }
     } catch (e) {
@@ -163,20 +156,26 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
   
   String _formatGrams(double grams) {
     return grams.toStringAsFixed(4);
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
     final isGold = _currentMetalType == 'gold';
-    final themeColor = isGold ? const Color(0xFFD4AF37) : const Color(0xFF9CA3AF);
+    final themeColor = isGold ? const Color(0xFFFFD700) : const Color(0xFFE5E7EB);
     
     return Scaffold(
-      backgroundColor: const Color(0xFF000000), // Pure dark matching React web #0A0A0A base
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('Lock & Earn', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 24)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: themeColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.help_outline, color: themeColor),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Consumer<GoldProvider>(
         builder: (context, gold, child) {
@@ -192,538 +191,349 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
           
           final filteredHistory = _history.where((h) => h['metal_type'] == _currentMetalType).toList();
           
+          // Auto-set amount to total balance for locking
+          if (_amount.isEmpty && totalGrams > 0) {
+            _amount = totalGrams.toString();
+            _amountController.text = _amount;
+          }
+          
           double parsedAmount = double.tryParse(_amount) ?? 0.0;
+          double currentValue = parsedAmount * currentRate;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Header text
-                const Text('Get up to 12% extra returns by locking your assets', style: TextStyle(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 25),
-                
-                // Toggle Buttons
+                // Icon Header
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildToggleButton('Lock Gold', 'gold', isGold),
-                      _buildToggleButton('Lock Silver', 'silver', !isGold),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: themeColor.withOpacity(0.5), width: 2),
+                    boxShadow: [
+                      BoxShadow(color: themeColor.withOpacity(0.2), blurRadius: 20, spreadRadius: 5)
                     ],
                   ),
+                  child: Center(
+                    child: Icon(Icons.dashboard, color: themeColor, size: 40), // Placeholder for gold bars icon
+                  ),
+                ).animate().scale(delay: 100.ms),
+                
+                const SizedBox(height: 20),
+                
+                // Title
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.horizontal_rule, color: themeColor.withOpacity(0.5), size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'LOCK-IN PERIOD',
+                      style: TextStyle(color: themeColor, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(Icons.horizontal_rule, color: themeColor.withOpacity(0.5), size: 20),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Lock your investment and earn extra returns',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 
-                const SizedBox(height: 25),
+                const SizedBox(height: 30),
                 
-                // Available Balance Card
+                // Investment Summary Card
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [themeColor.withOpacity(0.15), Colors.transparent],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: themeColor.withOpacity(0.2)),
+                    color: const Color(0xFF111111),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: themeColor.withOpacity(0.3)),
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 56, height: 56,
-                        decoration: BoxDecoration(
-                          color: themeColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(Icons.trending_up, color: themeColor, size: 28),
-                      ),
-                      const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('AVAILABLE ${isGold ? 'GOLD' : 'SILVER'} BALANCE', style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                          const Text('Your Investment', style: TextStyle(color: Colors.white54, fontSize: 12)),
                           const SizedBox(height: 4),
-                          Text(_formatGrams(totalGrams), style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900)),
-                          if (currentRate > 0)
-                            Text('≈ ${_formatINR(totalGrams * currentRate)}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                          Text('${_formatGrams(parsedAmount)} gm', style: TextStyle(color: themeColor, fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(isGold ? 'Gold' : 'Silver', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Current Value', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text(_formatINR(currentValue), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('Purity', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text(isGold ? '24K' : '999', style: TextStyle(color: themeColor, fontSize: 18, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
                   ),
-                ).animate().fadeIn(),
+                ).animate().fadeIn(delay: 200.ms),
                 
-                const SizedBox(height: 35),
-                const Text('Select Lock-in Plan', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 15),
+                const SizedBox(height: 30),
                 
-                // Plans Grid (Dynamic list identical to React)
-                GridView.builder(
+                // Choose Lock-in Period divider
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.diamond, color: themeColor.withOpacity(0.5), size: 10),
+                    const SizedBox(width: 10),
+                    const Text('CHOOSE LOCK-IN PERIOD', style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 10),
+                    Icon(Icons.diamond, color: themeColor.withOpacity(0.5), size: 10),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Plans List
+                if (_plans.isEmpty && !_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text('Loading plans...', style: TextStyle(color: Colors.white54)),
+                  ),
+                ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.95, // Made taller to match react design proportions
-                  ),
                   itemCount: _plans.length,
                   itemBuilder: (context, index) {
                     final plan = _plans[index];
                     final isSelected = _selectedPlan != null && _selectedPlan!['id'] == plan['id'];
-                    final colorHex = plan['color_hex'] as String? ?? '#3B82F6';
-                    final color = Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
+                    final months = plan['months'];
+                    
+                    // Calculate estimated date
+                    final lockTillDate = DateTime.now().add(Duration(days: (months * 30).toInt()));
+                    final dateStr = DateFormat('dd MMM yyyy').format(lockTillDate);
+                    
+                    // Calculate estimated profit
+                    final returnRate = double.tryParse(plan['return_percentage'].toString()) ?? 0.0;
+                    final estProfit = currentValue * (returnRate / 100);
 
                     return GestureDetector(
                       onTap: () => setState(() => _selectedPlan = plan),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? color.withOpacity(0.1) : const Color(0xFF141414),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: isSelected ? color : Colors.white.withOpacity(0.05)),
+                          color: const Color(0xFF111111),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? themeColor : Colors.white.withOpacity(0.1),
+                            width: isSelected ? 2 : 1,
+                          ),
+                          boxShadow: isSelected 
+                              ? [BoxShadow(color: themeColor.withOpacity(0.2), blurRadius: 10, spreadRadius: 1)]
+                              : [],
                         ),
-                        child: Stack(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Align(
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('${plan['months']} Months', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 8),
-                                  Text('+${plan['returnRate']}%', style: TextStyle(color: color, fontSize: 32, fontWeight: FontWeight.w900)),
-                                  const Text('EXTRA RETURN', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                                  if (plan['plan_name'] != null && plan['plan_name'].toString().isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Text(plan['plan_name'], style: const TextStyle(color: Colors.white30, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                                  ]
-                                ],
+                            // Radio button
+                            Container(
+                              width: 24,
+                              height: 24,
+                              margin: const EdgeInsets.only(right: 16),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: isSelected ? themeColor : Colors.white54, width: 2),
                               ),
-                            ),
-                            if (isSelected)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Icon(Icons.check_circle, color: color, size: 22),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ).animate().fadeIn(delay: 200.ms),
-                
-                const SizedBox(height: 25),
-                
-                // Info Cards
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F0F0F),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.security, color: themeColor, size: 16),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text('Your ${isGold ? 'gold' : 'silver'} remains completely safe in our insured vaults during the lock-in period.', style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.5))),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.info_outline, color: themeColor, size: 16),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text('Early withdrawal is possible but subject to penalty charges depending on the duration served.', style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.5))),
-                        ],
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 300.ms),
-
-                const SizedBox(height: 30),
-                
-                // Investment Details Card
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF121212),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Investment Details', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const SizedBox(height: 24),
-                      Text('${isGold ? 'GOLD' : 'SILVER'} TO LOCK (GRAMS)', style: const TextStyle(fontSize: 10, color: Colors.white30, fontWeight: FontWeight.bold, letterSpacing: 2)),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.05),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.3))),
-                          hintText: '0.0000',
-                          hintStyle: const TextStyle(color: Colors.white24),
-                        ),
-                        onChanged: (val) {
-                          setState(() {
-                            _amount = val;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _amount = totalGrams.toString();
-                              _amountController.text = _amount;
-                            });
-                          },
-                          child: Text('MAX: ${_formatGrams(totalGrams)}', style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                        ),
-                      ),
-                      
-                      if (_selectedPlan != null && parsedAmount > 0 && currentRate > 0) ...[
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Current Value:', style: TextStyle(color: Colors.white54, fontSize: 14)),
-                                  Text(_formatINR(parsedAmount * currentRate), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Guaranteed Return:', style: TextStyle(color: Colors.white54, fontSize: 14)),
-                                  Text('+${_selectedPlan!['returnRate']}%', style: const TextStyle(color: Colors.greenAccent, fontSize: 14, fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                child: Divider(color: Colors.white10, height: 1),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Estimated Extra Profit:', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-                                  Text(_formatINR((parsedAmount * currentRate) * (double.parse(_selectedPlan!['returnRate'].toString()) / 100)), 
-                                    style: TextStyle(color: themeColor, fontSize: 18, fontWeight: FontWeight.w900)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 60,
-                        child: ElevatedButton(
-                          onPressed: (_isLoading || _selectedPlan == null || parsedAmount <= 0) ? null : _lockMetal,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isGold ? const Color(0xFFD4AF37) : const Color(0xFFE5E7EB),
-                            disabledBackgroundColor: (isGold ? const Color(0xFFD4AF37) : const Color(0xFFE5E7EB)).withOpacity(0.5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 0,
-                          ),
-                          child: _isLoading 
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.lock, color: Colors.black, size: 20),
-                                    SizedBox(width: 10),
-                                    Text('Confirm Lock-In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-                                    SizedBox(width: 10),
-                                    Icon(Icons.arrow_forward, color: Colors.black, size: 20),
-                                  ],
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 400.ms),
-
-                // Lock-In History
-                if (filteredHistory.isNotEmpty) ...[
-                  const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Your Lock-In Portfolio', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: themeColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: themeColor.withOpacity(0.2)),
-                        ),
-                        child: Text('${filteredHistory.length} ACTIVE PLANS', style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredHistory.length,
-                    itemBuilder: (context, index) {
-                      final h = filteredHistory[index];
-                      final progress = (h['progress_percentage'] as num).toDouble();
-                      final estExtra = (h['estimated_extra'] as num?)?.toDouble() ?? (h['estimated_extra_gold'] as num?)?.toDouble() ?? 0.0;
-                      
-                      String startDateStr = h['start_date'].toString().split(' ')[0];
-                      String endDateStr = h['end_date'].toString().split(' ')[0];
-                      try {
-                         DateTime sd = DateTime.parse(startDateStr);
-                         DateTime ed = DateTime.parse(endDateStr);
-                         startDateStr = DateFormat('dd MMM yy').format(sd);
-                         endDateStr = DateFormat('dd MMM yyyy').format(ed);
-                      } catch(_) {}
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF141414),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          children: [
-                            // Background progress glow effect matching React!
-                            Positioned.fill(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return Container(
-                                    width: constraints.maxWidth * (progress / 100),
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width: constraints.maxWidth * (progress / 100),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [themeColor.withOpacity(0.05), Colors.transparent],
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                              child: isSelected 
+                                  ? Center(child: Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: themeColor)))
+                                  : null,
                             ),
                             
-                            Padding(
-                              padding: const EdgeInsets.all(24),
+                            // Months and Date
+                            Expanded(
+                              flex: 3,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Text(
+                                    months >= 12 
+                                        ? '${months ~/ 12} YEAR${months >= 24 ? 'S' : ''}'
+                                        : '$months MONTHS',
+                                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 4),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(_formatGrams((h['grams'] as num?)?.toDouble() ?? (h['gold_grams'] as num?)?.toDouble() ?? 0.0), 
-                                            style: TextStyle(color: themeColor, fontSize: 24, fontWeight: FontWeight.w900)),
-                                          const SizedBox(height: 4),
-                                          Text('${_currentMetalType.toUpperCase()} LOCKED', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.1), border: Border.all(color: Colors.greenAccent.withOpacity(0.2)), borderRadius: BorderRadius.circular(8)),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.trending_up, color: Colors.greenAccent, size: 14),
-                                                const SizedBox(width: 6),
-                                                Text('+${h['return_percentage']}%', style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.w900)),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text((h['plan_name'] ?? '${h['months']} Months').toString().toUpperCase(), style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                                        ],
-                                      ),
+                                      const Icon(Icons.calendar_today, color: Colors.white54, size: 12),
+                                      const SizedBox(width: 4),
+                                      Text('Lock till $dateStr', style: const TextStyle(color: Colors.white54, fontSize: 11)),
                                     ],
                                   ),
-                                  const SizedBox(height: 30),
-                                  
-                                  // Progress Bar mimicking Web
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text('MATURITY PROGRESS', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-                                      Text('${progress.toInt()}%', style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    height: 8,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF111111),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: Colors.white.withOpacity(0.05)),
-                                    ),
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        return Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            width: constraints.maxWidth * (progress / 100),
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: isGold ? const [Color(0xFFBF953F), Color(0xFFAA771C)] : const [Color(0xFF6B7280), Color(0xFFD1D5DB)],
-                                              ),
-                                              borderRadius: BorderRadius.circular(10),
-                                              boxShadow: [BoxShadow(color: themeColor.withOpacity(0.5), blurRadius: 10)],
-                                            ),
-                                            child: Stack(
-                                              children: [
-                                                Positioned(
-                                                  right: 0,
-                                                  top: 0,
-                                                  bottom: 0,
-                                                  width: 16,
-                                                  child: FadeTransition(
-                                                    opacity: _pulseController,
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white.withOpacity(0.2),
-                                                        borderRadius: BorderRadius.circular(10),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(startDateStr, style: const TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                                      Text('${h['days_remaining']} DAYS LEFT', style: const TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                                    ],
-                                  ),
-                                  
-                                  const SizedBox(height: 30),
-                                  
-                                  // Maturity Box
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.05),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.white.withOpacity(0.05)),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                ],
+                              ),
+                            ),
+                            
+                            // Return info
+                            Expanded(
+                              flex: 3,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.trending_up, color: themeColor, size: 28),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('EST. EXTRA ${_currentMetalType.toUpperCase()}', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                                            const SizedBox(height: 4),
-                                            Text('+${_formatGrams(estExtra)}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
-                                          ],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            const Text('MATURITY DATE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                                            const SizedBox(height: 4),
-                                            Text(endDateStr, style: TextStyle(color: themeColor, fontSize: 16, fontWeight: FontWeight.w900)),
-                                          ],
-                                        ),
+                                        const Text('Get extra', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                                        Text('$returnRate%', style: TextStyle(color: themeColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                                        const Text('yearly return on your investment', style: TextStyle(color: Colors.white54, fontSize: 9)),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            
+                            // Action Button / Profit
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text('EST. EXTRA PROFIT', style: TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 1)),
+                                  const SizedBox(height: 2),
+                                  Text('+ ${_formatINR(estProfit)}', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? themeColor : Colors.transparent,
+                                      border: Border.all(color: themeColor),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      isSelected ? 'SELECTED' : 'SELECT',
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.black : themeColor,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1, end: 0);
-                    },
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(delay: 300.ms),
+                
+                const SizedBox(height: 20),
+                
+                // Summary Footer
+                if (_selectedPlan != null && currentValue > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.bar_chart, color: themeColor, size: 30),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('ESTIMATED MATURITY VALUE', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatINR(currentValue + (currentValue * (double.parse(_selectedPlan!['return_percentage'].toString()) / 100))),
+                                  style: TextStyle(color: themeColor, fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(width: 1, height: 40, color: Colors.white.withOpacity(0.2)),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('TOTAL EXTRA PROFIT', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1)),
+                            const SizedBox(height: 4),
+                            Text(
+                              '+ ${_formatINR(currentValue * (double.parse(_selectedPlan!['return_percentage'].toString()) / 100))}',
+                              style: const TextStyle(color: Colors.green, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '* Values are estimated and may vary with market conditions.',
+                    style: TextStyle(color: Colors.white30, fontSize: 10),
                   ),
                 ],
+                
+                const SizedBox(height: 20),
+                
+                // Confirm Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: (_isLoading || _selectedPlan == null || parsedAmount <= 0) ? null : _lockMetal,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: themeColor,
+                      disabledBackgroundColor: themeColor.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.black)
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.lock, color: Colors.black, size: 20),
+                              SizedBox(width: 10),
+                              Text('CONFIRM LOCK-IN', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                            ],
+                          ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.security, color: Colors.white54, size: 14),
+                    SizedBox(width: 8),
+                    Text('Your investment is 100% secure with bank-grade protection', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                  ],
+                ),
+                const SizedBox(height: 30),
               ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildToggleButton(String text, String value, bool isSelected) {
-    return GestureDetector(
-      onTap: () => _onMetalTypeChanged(value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? (value == 'gold' ? const Color(0xFFD4AF37) : const Color(0xFFD1D5DB)) 
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected && value == 'gold' 
-              ? [BoxShadow(color: const Color(0xFFD4AF37).withOpacity(0.4), blurRadius: 15)] 
-              : isSelected && value == 'silver'
-                  ? [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10)]
-                  : [],
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.black : Colors.white54,
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-          ),
-        ),
       ),
     );
   }
