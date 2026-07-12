@@ -479,13 +479,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "₹ ${formatINR(sipAmount)} / ${data['sip_frequency']?.toString().toUpperCase() ?? 'MONTHLY'}",
+                                  "Total: ₹ ${formatINR(sipAmount)}",
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                if (data['sip_breakdown'] is Map)
+                                  ...((data['sip_breakdown'] as Map).entries.map((e) => Text(
+                                    "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ))),
                               ],
                             ),
                           ),
