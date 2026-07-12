@@ -349,7 +349,7 @@ class _SplashScreenState extends State<SplashScreen>
                         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                         child: Center(
                           child: Image.asset(
-                            'assets/images/GoldBarPay.png',
+                            'assets/icon/newlogo.png',
                             width: 78,
                             height: 78,
                             fit: BoxFit.contain,

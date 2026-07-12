@@ -47,10 +47,14 @@ class _WalletScreenState extends State<WalletScreen> {
     final res = await provider.depositFunds(amount, _walletType);
     if (mounted) {
       if (res['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
         _amountController.clear();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Deposit failed')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message'] ?? 'Deposit failed')),
+        );
       }
     }
   }
@@ -58,12 +62,21 @@ class _WalletScreenState extends State<WalletScreen> {
   void _handleSipSave() async {
     final amount = double.tryParse(_sipAmountController.text) ?? 0;
     final provider = Provider.of<GoldProvider>(context, listen: false);
-    final res = await provider.updateSipSettings(_sipActive, amount, _sipFreq, _sipMetalType);
+    final res = await provider.updateSipSettings(
+      _sipActive,
+      amount,
+      _sipFreq,
+      _sipMetalType,
+    );
     if (mounted) {
       if (res['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SIP Settings Saved')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('SIP Settings Saved')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to save SIP')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message'] ?? 'Failed to save SIP')),
+        );
       }
     }
   }
@@ -75,12 +88,18 @@ class _WalletScreenState extends State<WalletScreen> {
         final ctrl = TextEditingController();
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text('Withdraw Funds', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Withdraw Funds',
+            style: TextStyle(color: Colors.white),
+          ),
           content: Consumer<AuthProvider>(
             builder: (ctx2, authProv, _) {
               final user = authProv.user;
-              final hasBankDetails = user != null && user['account_number'] != null && user['account_number'].toString().isNotEmpty;
-              
+              final hasBankDetails =
+                  user != null &&
+                  user['account_number'] != null &&
+                  user['account_number'].toString().isNotEmpty;
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,11 +112,20 @@ class _WalletScreenState extends State<WalletScreen> {
                       labelText: 'Amount',
                       prefixText: '₹ ',
                       labelStyle: TextStyle(color: Colors.grey),
-                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Withdraw to Bank', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Withdraw to Bank',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   if (hasBankDetails)
                     Container(
@@ -109,20 +137,47 @@ class _WalletScreenState extends State<WalletScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Bank: ${user['bank_name']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                          Text('A/C: ${user['account_number']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                          Text('IFSC: ${user['ifsc_code']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                          Text('Name: ${user['account_holder_name']}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          Text(
+                            'Bank: ${user['bank_name']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'A/C: ${user['account_number']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'IFSC: ${user['ifsc_code']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Name: ${user['account_holder_name']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     )
                   else
-                    const Text('Please update your bank details in the Profile section.', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                    const Text(
+                      'Please update your bank details in the Profile section.',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                    ),
                 ],
               );
-            }
+            },
           ),
-              actions: [
+          actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -131,23 +186,47 @@ class _WalletScreenState extends State<WalletScreen> {
               onPressed: () async {
                 final amt = double.tryParse(ctrl.text) ?? 0;
                 if (amt <= 0) return;
-                
-                final auth = Provider.of<AuthProvider>(context, listen: false).user;
-                if (auth == null || auth['account_number'] == null || auth['account_number'].toString().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please update your bank details in the Profile section before withdrawing.')));
+
+                final auth = Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                ).user;
+                if (auth == null ||
+                    auth['account_number'] == null ||
+                    auth['account_number'].toString().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please update your bank details in the Profile section before withdrawing.',
+                      ),
+                    ),
+                  );
                   Navigator.pop(ctx);
                   return;
                 }
-                
+
                 Navigator.pop(ctx);
-                
-                final provider = Provider.of<GoldProvider>(context, listen: false);
+
+                final provider = Provider.of<GoldProvider>(
+                  context,
+                  listen: false,
+                );
                 final res = await provider.withdrawFunds(amt);
                 if (mounted) {
                   if (res['success'] == true) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Withdrawal request submitted successfully')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Withdrawal request submitted successfully',
+                        ),
+                      ),
+                    );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Withdrawal failed')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(res['message'] ?? 'Withdrawal failed'),
+                      ),
+                    );
                   }
                 }
               },
@@ -164,15 +243,14 @@ class _WalletScreenState extends State<WalletScreen> {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('WALLET & SIP'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('WALLET & SIP'), centerTitle: true),
       body: Consumer<GoldProvider>(
         builder: (context, provider, _) {
           final data = provider.dashboardData ?? {};
-          final inrBalance = double.tryParse(data['inr_wallet']?.toString() ?? '') ?? 0.0;
-          final japsanBalance = double.tryParse(data['japsan_wallet']?.toString() ?? '') ?? 0.0;
+          final inrBalance =
+              double.tryParse(data['inr_wallet']?.toString() ?? '') ?? 0.0;
+          final japsanBalance =
+              double.tryParse(data['japsan_wallet']?.toString() ?? '') ?? 0.0;
           final sipHistory = provider.sipHistory;
 
           return SingleChildScrollView(
@@ -196,11 +274,24 @@ class _WalletScreenState extends State<WalletScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('INR WALLET', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                                const Text(
+                                  'INR WALLET',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 5),
-                            Text(currencyFormat.format(inrBalance), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text(
+                              currencyFormat.format(inrBalance),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -216,9 +307,23 @@ class _WalletScreenState extends State<WalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('JAPSAN WALLET', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                            const Text(
+                              'JAPSAN WALLET',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 5),
-                            Text(currencyFormat.format(japsanBalance), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                            Text(
+                              currencyFormat.format(japsanBalance),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purpleAccent,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -228,14 +333,20 @@ class _WalletScreenState extends State<WalletScreen> {
                 const SizedBox(height: 30),
 
                 // Deposit Section
-                const Text('Deposit Funds', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Deposit Funds',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 15),
                 DropdownButtonFormField<String>(
                   value: _walletType,
                   decoration: const InputDecoration(labelText: 'Wallet Type'),
                   items: const [
                     DropdownMenuItem(value: 'inr', child: Text('INR Wallet')),
-                    DropdownMenuItem(value: 'japsan', child: Text('Japsan Wallet')),
+                    DropdownMenuItem(
+                      value: 'japsan',
+                      child: Text('Japsan Wallet'),
+                    ),
                   ],
                   onChanged: (val) => setState(() => _walletType = val!),
                 ),
@@ -243,7 +354,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 TextField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Amount', prefixText: '₹ '),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    prefixText: '₹ ',
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -256,7 +370,10 @@ class _WalletScreenState extends State<WalletScreen> {
                           backgroundColor: Colors.amber,
                           foregroundColor: Colors.black,
                         ),
-                        child: const Text('DEPOSIT', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'DEPOSIT',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -268,12 +385,15 @@ class _WalletScreenState extends State<WalletScreen> {
                           side: const BorderSide(color: Colors.white30),
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('WITHDRAW', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'WITHDRAW',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(15),
@@ -287,21 +407,47 @@ class _WalletScreenState extends State<WalletScreen> {
                     children: [
                       RichText(
                         text: const TextSpan(
-                          style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
                           children: [
-                            TextSpan(text: 'Deposit: ', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                            TextSpan(text: 'Add funds to your wallet. When your INR balance reaches ₹1,000, it automatically converts into Digital Gold to secure your savings.'),
-                          ]
+                            TextSpan(
+                              text: 'Deposit: ',
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  'Add funds to your wallet. When your INR balance reaches ₹1,000, it automatically converts into Digital Gold to secure your savings.',
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 10),
                       RichText(
                         text: const TextSpan(
-                          style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.4),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
                           children: [
-                            TextSpan(text: 'Withdraw: ', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-                            TextSpan(text: 'Transfer your available INR balance directly to your registered bank account.'),
-                          ]
+                            TextSpan(
+                              text: 'Withdraw: ',
+                              style: TextStyle(
+                                color: Colors.blueAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  'Transfer your available INR balance directly to your registered bank account.',
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -311,7 +457,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 const SizedBox(height: 40),
 
                 // SIP Settings
-                const Text('Auto SIP Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Auto SIP Settings',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 15),
                 SwitchListTile(
                   title: const Text('Enable SIP'),
@@ -324,12 +473,17 @@ class _WalletScreenState extends State<WalletScreen> {
                   TextField(
                     controller: _sipAmountController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'SIP Amount', prefixText: '₹ '),
+                    decoration: const InputDecoration(
+                      labelText: 'SIP Amount',
+                      prefixText: '₹ ',
+                    ),
                   ),
                   const SizedBox(height: 15),
                   DropdownButtonFormField<String>(
                     value: _sipMetalType,
-                    decoration: const InputDecoration(labelText: 'SIP Metal Type'),
+                    decoration: const InputDecoration(
+                      labelText: 'SIP Metal Type',
+                    ),
                     items: const [
                       DropdownMenuItem(value: 'gold', child: Text('Gold')),
                       DropdownMenuItem(value: 'silver', child: Text('Silver')),
@@ -342,7 +496,10 @@ class _WalletScreenState extends State<WalletScreen> {
                     decoration: const InputDecoration(labelText: 'Frequency'),
                     items: const [
                       DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                      DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
+                      DropdownMenuItem(
+                        value: 'monthly',
+                        child: Text('Monthly'),
+                      ),
                     ],
                     onChanged: (val) => setState(() => _sipFreq = val!),
                   ),
@@ -362,20 +519,45 @@ class _WalletScreenState extends State<WalletScreen> {
 
                 // SIP History
                 if (sipHistory != null) ...[
-                  const Text('SIP Investment Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'SIP Investment Summary',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 15),
                   Row(
                     children: [
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(color: const Color(0xFF1E1E1E), borderRadius: BorderRadius.circular(15)),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('TOTAL INVESTED', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                              const Text(
+                                'TOTAL INVESTED',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10,
+                                ),
+                              ),
                               const SizedBox(height: 5),
-                              Text(currencyFormat.format(double.tryParse(sipHistory['total_invested']?.toString() ?? '') ?? 0.0), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text(
+                                currencyFormat.format(
+                                  double.tryParse(
+                                        sipHistory['total_invested']
+                                                ?.toString() ??
+                                            '',
+                                      ) ??
+                                      0.0,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -384,13 +566,29 @@ class _WalletScreenState extends State<WalletScreen> {
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(color: const Color(0xFF1E1E1E), borderRadius: BorderRadius.circular(15)),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('GOLD ACQUIRED', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                              const Text(
+                                'GOLD ACQUIRED',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10,
+                                ),
+                              ),
                               const SizedBox(height: 5),
-                              Text('${sipHistory['total_gold'] ?? 0}g', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+                              Text(
+                                '${sipHistory['total_gold'] ?? 0}g',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFFFD700),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -398,7 +596,14 @@ class _WalletScreenState extends State<WalletScreen> {
                     ],
                   ),
                   const SizedBox(height: 15),
-                  const Text('Recent Deductions', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Recent Deductions',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   ListView.builder(
                     shrinkWrap: true,
@@ -408,9 +613,24 @@ class _WalletScreenState extends State<WalletScreen> {
                       final txn = sipHistory['history'][index];
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(currencyFormat.format(double.tryParse(txn['amount_inr']?.toString() ?? '') ?? 0.0)),
-                        subtitle: Text(txn['created_at'].toString().split(' ')[0]),
-                        trailing: Text('+${txn['gold_grams']}g', style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+                        title: Text(
+                          currencyFormat.format(
+                            double.tryParse(
+                                  txn['amount_inr']?.toString() ?? '',
+                                ) ??
+                                0.0,
+                          ),
+                        ),
+                        subtitle: Text(
+                          txn['created_at'].toString().split(' ')[0],
+                        ),
+                        trailing: Text(
+                          '+${txn['gold_grams']}g',
+                          style: const TextStyle(
+                            color: Color(0xFFFFD700),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       );
                     },
                   ),

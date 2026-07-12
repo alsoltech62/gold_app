@@ -13,7 +13,7 @@ class WelcomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF070707),
         elevation: 0,
-        title: Image.asset('assets/images/GoldBarPay.png', height: 40),
+        title: Image.asset('assets/icon/newlogo.png', height: 40),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),

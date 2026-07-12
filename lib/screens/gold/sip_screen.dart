@@ -39,7 +39,12 @@ class _SipScreenState extends State<SipScreen> {
           if (_plans.isNotEmpty) {
             _selectedPlan = _plans.first;
             _amount = _selectedPlan!['min_amount'].toString();
-            _frequency = _selectedPlan!['frequency'];
+            final rawFreq = _selectedPlan!['frequency']?.toString() ?? '';
+            final planName = _selectedPlan!['plan_name']?.toString().toLowerCase() ?? '';
+            _frequency = rawFreq.isNotEmpty ? rawFreq :
+                        (planName.contains('daily') ? 'daily' :
+                         planName.contains('weekly') ? 'weekly' :
+                         planName.contains('yearly') ? 'yearly' : 'monthly');
           }
         });
       }
@@ -189,7 +194,12 @@ class _SipScreenState extends State<SipScreen> {
                             setState(() {
                               _selectedPlan = plan;
                               _amount = plan['min_amount'].toString();
-                              _frequency = plan['frequency'];
+                              final rawFreq = plan['frequency']?.toString() ?? '';
+                              final planName = plan['plan_name']?.toString().toLowerCase() ?? '';
+                              _frequency = rawFreq.isNotEmpty ? rawFreq :
+                                          (planName.contains('daily') ? 'daily' :
+                                           planName.contains('weekly') ? 'weekly' :
+                                           planName.contains('yearly') ? 'yearly' : 'monthly');
                             });
                           },
                           child: Container(
@@ -226,13 +236,24 @@ class _SipScreenState extends State<SipScreen> {
                                     fontSize: 10,
                                   ),
                                 ),
-                                Text(
-                                  plan['frequency'].toString().toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                Builder(
+                                  builder: (context) {
+                                    final rawFreq = plan['frequency']?.toString() ?? '';
+                                    final planName = plan['plan_name']?.toString().toLowerCase() ?? '';
+                                    final displayFreq = rawFreq.isNotEmpty ? rawFreq :
+                                          (planName.contains('daily') ? 'daily' :
+                                           planName.contains('weekly') ? 'weekly' :
+                                           planName.contains('yearly') ? 'yearly' : 'monthly');
+                                    
+                                    return Text(
+                                      displayFreq.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  }
                                 ),
                               ],
                             ),
@@ -263,7 +284,7 @@ class _SipScreenState extends State<SipScreen> {
                       border: Border.all(color: Colors.green.withOpacity(0.3)),
                     ),
                     child: Text(
-                      _frequency.toUpperCase(),
+                      _frequency.isEmpty ? 'MONTHLY' : _frequency.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,

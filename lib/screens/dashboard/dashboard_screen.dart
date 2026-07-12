@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -17,15 +18,63 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final PageController _pageController = PageController();
+  Timer? _bannerTimer;
+  int _currentBannerIndex = 0;
+  
+  final List<Map<String, String>> _banners = [
+    {
+      'image': 'assets/images/jewelry_banner.png',
+      'title': 'Invest in Precious\nMetals, Secure\nYour Future',
+      'subtitle': 'Start Your Investment Today'
+    },
+    {
+      'image': 'assets/images/gold_bars_hero.png',
+      'title': '24K Pure Gold\nDelivered to\nYour Doorstep',
+      'subtitle': '100% Insured Delivery'
+    },
+    {
+      'image': 'assets/images/gold_bangle_feature.png',
+      'title': 'Lock-In your\nAssets for Extra\nReturns',
+      'subtitle': 'Up to 12% Extra Profit'
+    },
+    {
+      'image': 'assets/images/gold_coins_footer.png',
+      'title': 'Build Wealth\nWith Digital\nSilver & Gold',
+      'subtitle': 'Secure & Transparent'
+    }
+  ];
+
   @override
   void initState() {
     super.initState();
+    _startBannerTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final goldProvider = Provider.of<GoldProvider>(context, listen: false);
       goldProvider.fetchDashboard();
       goldProvider.fetchCurrentRate();
       goldProvider.fetchSilverRate();
     });
+  }
+
+  void _startBannerTimer() {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_pageController.hasClients) {
+        int nextIndex = (_currentBannerIndex + 1) % _banners.length;
+        _pageController.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   String formatINR(dynamic value) {
@@ -57,7 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
             color: Colors.black,
           ),
-          child: Image.asset('assets/images/GoldBarPay.png', fit: BoxFit.contain),
+          child: Image.asset('assets/icon/newlogo.png', fit: BoxFit.contain),
         ),
         actions: [
           IconButton(
@@ -89,6 +138,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final currentGoldValue = data['gold_current_value'] ?? 0;
           final currentSilverValue = data['silver_current_value'] ?? 0;
           final totalValue = data['current_value_inr'] ?? 0;
+          final lockedGold = data['locked_gold'] ?? 0;
+          final lockedSilver = data['locked_silver'] ?? 0;
+          final sipActive = data['sip_active'] ?? false;
+          final sipAmount = data['sip_amount'] ?? 0;
 
           final pl =
               double.tryParse(data['profit_loss_inr']?.toString() ?? '0') ?? 0;
@@ -226,130 +279,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
 
                   // Promo Banner
-                  Container(
+                  SizedBox(
                     height: 140,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF111111),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFD4AF37).withOpacity(0.3),
-                      ),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/jewelry_banner.png'),
-                        fit: BoxFit.cover,
-                        opacity: 0.7,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Container(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentBannerIndex = index;
+                        });
+                      },
+                      itemCount: _banners.length,
+                      itemBuilder: (context, index) {
+                        final banner = _banners[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
+                            color: const Color(0xFF111111),
                             borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.black.withOpacity(0.9),
-                                Colors.transparent,
-                              ],
+                            border: Border.all(
+                              color: const Color(0xFFD4AF37).withOpacity(0.3),
+                            ),
+                            image: DecorationImage(
+                              image: AssetImage(banner['image']!),
+                              fit: BoxFit.cover,
+                              opacity: 0.7,
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Text(
-                                "Invest in Precious\nMetals, Secure\nYour Future",
-                                style: TextStyle(
-                                  color: Color(0xFFD4AF37),
-                                  fontSize: 16,
-                                  fontFamily: 'serif',
-                                  height: 1.2,
+                          child: Stack(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Colors.black.withOpacity(0.9),
+                                      Colors.transparent,
+                                    ],
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                "Start Your Investment Today",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10,
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      banner['title']!,
+                                      style: const TextStyle(
+                                        color: Color(0xFFD4AF37),
+                                        fontSize: 16,
+                                        fontFamily: 'serif',
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      banner['subtitle']!,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: List.generate(_banners.length, (dotIndex) {
+                                      final isActive = _currentBannerIndex == dotIndex;
+                                      return AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                                        width: isActive ? 16 : 4,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: isActive ? const Color(0xFFD4AF37) : Colors.white30,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                      );
+                                    }),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 4.0),
-                            child: Icon(
-                              Icons.chevron_left,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 4.0),
-                            child: Icon(
-                              Icons.chevron_right,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 16,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFD4AF37),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white30,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white30,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white30,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -399,6 +421,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTrendCard(
+                          Icons.lock_outline,
+                          const Color(0xFFD4AF37),
+                          "LOCKED GOLD",
+                          "${formatGrams(lockedGold)} gm",
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTrendCard(
+                          Icons.lock_outline,
+                          Colors.grey,
+                          "LOCKED SILVER",
+                          "${formatGrams(lockedSilver)} gm",
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (sipActive) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF121212),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.autorenew, color: Colors.green, size: 24),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "ACTIVE SIP",
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "₹ ${formatINR(sipAmount)} / ${data['sip_frequency']?.toString().toUpperCase() ?? 'MONTHLY'}",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Total Portfolio Value
                   Container(
