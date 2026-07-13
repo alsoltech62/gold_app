@@ -1,4 +1,4 @@
-package com.example.goldapp
+package com.japsan.goldbarpay
 
 import io.flutter.embedding.android.FlutterActivity
 

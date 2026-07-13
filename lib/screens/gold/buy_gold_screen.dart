@@ -32,7 +32,8 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
       return;
     }
     final amount = double.tryParse(value) ?? 0.0;
-    final rate = Provider.of<GoldProvider>(context, listen: false).currentRate?['rate_per_gram'] ?? 0.0;
+    final rateRaw = Provider.of<GoldProvider>(context, listen: false).currentRate?['rate_per_gram'];
+    final rate = rateRaw != null ? double.tryParse(rateRaw.toString()) ?? 0.0 : 0.0;
     if (rate > 0) {
       setState(() => _grams = amount / rate);
     }

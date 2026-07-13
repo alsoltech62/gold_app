@@ -9,6 +9,7 @@ import '../silver/silver_screen.dart';
 import '../silver/buy_silver_flow_screen.dart';
 import '../transactions/transaction_list_screen.dart';
 import '../notifications_screen.dart';
+import '../gold/sip_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -140,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final totalValue = data['current_value_inr'] ?? 0;
           final lockedGold = data['locked_gold'] ?? 0;
           final lockedSilver = data['locked_silver'] ?? 0;
-          final sipActive = data['sip_active'] ?? false;
+          final sipActive = (data['sip_active'] == true || data['sip_active'] == 1);
           final sipAmount = data['sip_amount'] ?? 0;
 
           final pl =
@@ -468,14 +469,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "ACTIVE SIP",
-                                  style: TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      "ACTIVE SIP",
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const SipScreen(metalType: 'all'),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: const [
+                                          Text(
+                                            "VIEW ALL ",
+                                            style: TextStyle(
+                                              color: Colors.green,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            color: Colors.green,
+                                            size: 14,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

@@ -15,7 +15,13 @@ class GoldProvider with ChangeNotifier {
 
   Map<String, dynamic>? get dashboardData => _dashboardData;
   Map<String, dynamic>? get currentRate => _currentRate;
-  Map<String, dynamic>? get silverRate => _silverRate;
+  Map<String, dynamic>? get silverRate {
+    if (_silverRate == null) return null;
+    if (_silverRate!['current_rate'] != null) {
+      return _silverRate!['current_rate'];
+    }
+    return _silverRate;
+  }
   List<dynamic> get transactions => _transactions;
   Map<String, dynamic>? get sipHistory => _sipHistory;
   List<dynamic> get tickets => _tickets;
@@ -74,15 +80,36 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchSipHistory() async {
+  Future<void> fetchSipHistory({String? metalType}) async {
     try {
-      final response = await _apiClient.get('/api/user/sip_history.php');
+      String url = '/api/user/sip_history.php';
+      if (metalType != null && metalType != 'all') {
+        url += '?metal_type=$metalType';
+      }
+      final response = await _apiClient.get(url);
       if (response['success'] == true) {
         _sipHistory = response['data'];
         notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching sip history: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelSip(int sipId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/user/cancel_sip.php', {
+        'sip_id': sipId,
+      });
+      return response;
+    } catch (e) {
+      debugPrint('Error cancelling sip: $e');
+      return {'success': false, 'message': 'Failed to cancel SIP'};
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

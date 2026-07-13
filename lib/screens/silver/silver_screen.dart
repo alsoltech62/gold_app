@@ -161,7 +161,8 @@ class _SilverScreenState extends State<SilverScreen> {
       ),
       body: Consumer<GoldProvider>(
         builder: (context, provider, child) {
-          final silverRate = provider.silverRate?['rate_per_gram'] ?? 0.0;
+          final rateRaw = provider.silverRate?['rate_per_gram'];
+          final silverRate = rateRaw != null ? double.tryParse(rateRaw.toString()) ?? 0.0 : 0.0;
           final silverBalance = provider.dashboardData?['total_silver_grams'] ?? 0.0;
 
           return SingleChildScrollView(
