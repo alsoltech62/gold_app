@@ -118,7 +118,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Profile')),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)))
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)))
         : Form(
             key: _formKey,
             child: ListView(
@@ -136,7 +136,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       return Theme(
                         data: ThemeData.dark().copyWith(
                           colorScheme: const ColorScheme.dark(
-                            primary: Color(0xFFFFD700),
+                            primary: Color(0xFFB08D57),
                             onPrimary: Colors.black,
                             surface: Color(0xFF1E1E1E),
                             onSurface: Colors.white,
@@ -161,7 +161,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: Text('KYC Documents', style: TextStyle(color: Color(0xFFFFD700), fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text('KYC Documents', style: TextStyle(color: Color(0xFFB08D57), fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
                 _buildImagePicker('Aadhar Card (Front)', _aadharFront, (f) => setState(() => _aadharFront = f)),
                 _buildImagePicker('Aadhar Card (Back)', _aadharBack, (f) => setState(() => _aadharBack = f)),
@@ -170,7 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: const Color(0xFFB08D57),
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.all(16),
                   ),
@@ -195,7 +195,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           labelText: label,
           labelStyle: const TextStyle(color: Colors.grey),
           enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFFFD700))),
+          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFB08D57))),
         ),
       ),
     );

@@ -30,7 +30,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF070707),
-          border: Border(top: BorderSide(color: const Color(0xFFD4AF37).withOpacity(0.1))),
+          border: Border(top: BorderSide(color: const Color(0xFFB08D57).withOpacity(0.1))),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -40,7 +40,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
             });
           },
           backgroundColor: const Color(0xFF070707),
-          selectedItemColor: const Color(0xFFD4AF37),
+          selectedItemColor: const Color(0xFFB08D57),
           unselectedItemColor: Colors.grey,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),

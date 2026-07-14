@@ -18,10 +18,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PROFILE'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('PROFILE'), centerTitle: true),
       body: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           final user = auth.user ?? {};
@@ -31,13 +28,16 @@ class ProfileScreen extends StatelessWidget {
               const CircleAvatar(
                 radius: 50,
                 backgroundColor: Color(0xFF1E1E1E),
-                child: Icon(Icons.person, size: 50, color: Color(0xFFFFD700)),
+                child: Icon(Icons.person, size: 50, color: Color(0xFFB08D57)),
               ),
               const SizedBox(height: 20),
               Text(
                 user['name'] ?? 'User',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 5),
               Text(
@@ -47,39 +47,61 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               _buildListTile(Icons.edit, 'Edit Profile', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                );
               }),
               _buildListTile(Icons.history, 'Transaction History', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TransactionListScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const TransactionListScreen(),
+                  ),
+                );
               }),
-              _buildListTile(Icons.card_giftcard, 'Refer & Earn (Copy Code)', () {
-                Clipboard.setData(ClipboardData(text: user['mobile'] ?? ''));
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Referral code copied to clipboard!'),
-                  backgroundColor: Colors.green,
-                ));
-              }),
+              _buildListTile(
+                Icons.card_giftcard,
+                'Refer & Earn (Copy Code)',
+                () {
+                  Clipboard.setData(ClipboardData(text: user['mobile'] ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Referral code copied to clipboard!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
               _buildListTile(Icons.share, 'Share Referral Link', () {
                 final mobile = user['mobile'] ?? '';
                 Share.share(
-                  'Join Gold Savings and start investing in digital gold & silver!\nUse my referral code: $mobile\nhttps://gold.foodpulse.in/signup?ref=$mobile',
+                  'Join Gold Savings and start investing in digital gold & silver!\nUse my referral code: $mobile\nhttps://goldpay.odofast.in/signup?ref=$mobile',
                   subject: 'Join Gold Savings',
                 );
               }),
               _buildListTile(Icons.help_outline, 'Support', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupportScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SupportScreen()),
+                );
               }),
               _buildListTile(Icons.info_outline, 'About Us', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AboutScreen()));
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const AboutScreen()));
               }),
               _buildListTile(Icons.gavel, 'Terms & Conditions', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TermsScreen()));
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const TermsScreen()));
               }),
               _buildListTile(Icons.privacy_tip, 'Privacy Policy', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrivacyScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                );
               }),
               _buildListTile(Icons.keyboard_return, 'Returns Policy', () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReturnsScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ReturnsScreen()),
+                );
               }),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -107,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFFFFD700)),
+      leading: Icon(icon, color: const Color(0xFFB08D57)),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       onTap: onTap,

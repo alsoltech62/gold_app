@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 60),
                   const Icon(
                     Icons.account_balance_wallet,
-                    color: Color(0xFFFFD700),
+                    color: Color(0xFFB08D57),
                     size: 50,
                   ).animate().fadeIn().scale(),
                   const SizedBox(height: 30),
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'Mobile Number',
-                      prefixIcon: Icon(Icons.phone_android, color: Color(0xFFFFD700)),
+                      prefixIcon: Icon(Icons.phone_android, color: Color(0xFFB08D57)),
                       hintText: 'Enter your 10 digit mobile number',
                     ),
                     validator: (value) {
@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: const Text(
                             "Register Now",
-                            style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],

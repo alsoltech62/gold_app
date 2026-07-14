@@ -134,7 +134,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 ],
 
                 if (provider.isLoading && tickets.isEmpty)
-                  const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)))
+                  const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)))
                 else if (tickets.isEmpty)
                   const Center(
                     child: Padding(

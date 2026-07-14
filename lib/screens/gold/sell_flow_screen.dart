@@ -24,7 +24,7 @@ class _SellFlowScreenState extends State<SellFlowScreen> {
   @override
   Widget build(BuildContext context) {
     bool isGold = metalType == 'gold';
-    Color themeColor = isGold ? const Color(0xFFFFD700) : Colors.grey;
+    Color themeColor = isGold ? const Color(0xFFB08D57) : Colors.grey;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,10 +57,10 @@ class _SellFlowScreenState extends State<SellFlowScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isGold ? const Color(0xFFFFD700) : Colors.transparent,
+                        color: isGold ? const Color(0xFFB08D57) : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: isGold ? [
-                          BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.4), blurRadius: 15)
+                          BoxShadow(color: const Color(0xFFB08D57).withOpacity(0.4), blurRadius: 15)
                         ] : [],
                       ),
                       child: Text(

@@ -69,7 +69,7 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
             const SizedBox(height: 10),
             Text(
               'Available Balance: ${totalGrams.toStringAsFixed(4)} gms',
-              style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold),
             ).animate().fadeIn(delay: 200.ms),
             const SizedBox(height: 40),
             TextField(
@@ -95,7 +95,7 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.currency_rupee, color: Color(0xFFFFD700), size: 18),
+                    const Icon(Icons.currency_rupee, color: Color(0xFFB08D57), size: 18),
                     const SizedBox(width: 10),
                     Text(
                       'You will receive: ₹${_amount.toStringAsFixed(2)}',

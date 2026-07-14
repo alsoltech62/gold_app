@@ -10,6 +10,7 @@ import '../silver/buy_silver_flow_screen.dart';
 import '../transactions/transaction_list_screen.dart';
 import '../notifications_screen.dart';
 import '../gold/sip_screen.dart';
+import '../gold/lock_in_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,28 +23,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final PageController _pageController = PageController();
   Timer? _bannerTimer;
   int _currentBannerIndex = 0;
-  
+
   final List<Map<String, String>> _banners = [
     {
       'image': 'assets/images/jewelry_banner.png',
       'title': 'Invest in Precious\nMetals, Secure\nYour Future',
-      'subtitle': 'Start Your Investment Today'
+      'subtitle': 'Start Your Investment Today',
     },
     {
       'image': 'assets/images/gold_bars_hero.png',
       'title': '24K Pure Gold\nDelivered to\nYour Doorstep',
-      'subtitle': '100% Insured Delivery'
+      'subtitle': '100% Insured Delivery',
     },
     {
       'image': 'assets/images/gold_bangle_feature.png',
       'title': 'Lock-In your\nAssets for Extra\nReturns',
-      'subtitle': 'Up to 12% Extra Profit'
+      'subtitle': 'Up to 12% Extra Profit',
     },
     {
       'image': 'assets/images/gold_coins_footer.png',
       'title': 'Build Wealth\nWith Digital\nSilver & Gold',
-      'subtitle': 'Secure & Transparent'
-    }
+      'subtitle': 'Secure & Transparent',
+    },
   ];
 
   @override
@@ -104,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+            border: Border.all(color: const Color(0xFFB08D57), width: 1.5),
             color: Colors.black,
           ),
           child: Image.asset('assets/icon/newlogo.png', fit: BoxFit.contain),
@@ -113,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(
               Icons.notifications_none,
-              color: Color(0xFFD4AF37),
+              color: Color(0xFFB08D57),
             ),
             onPressed: () => Navigator.push(
               context,
@@ -127,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context, gold, child) {
           if (gold.isLoading && gold.dashboardData == null) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
+              child: CircularProgressIndicator(color: Color(0xFFB08D57)),
             );
           }
 
@@ -141,7 +142,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final totalValue = data['current_value_inr'] ?? 0;
           final lockedGold = data['locked_gold'] ?? 0;
           final lockedSilver = data['locked_silver'] ?? 0;
-          final sipActive = (data['sip_active'] == true || data['sip_active'] == 1);
+          final sipActive =
+              (data['sip_active'] == true || data['sip_active'] == 1);
           final sipAmount = data['sip_amount'] ?? 0;
 
           final pl =
@@ -154,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : '0.00';
 
           return RefreshIndicator(
-            color: const Color(0xFFD4AF37),
+            color: const Color(0xFFB08D57),
             onRefresh: () async {
               await gold.fetchDashboard();
               await gold.fetchCurrentRate();
@@ -173,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: const Color(0xFF121212),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFD4AF37).withOpacity(0.4),
+                        color: const Color(0xFFB08D57).withOpacity(0.4),
                       ),
                     ),
                     child: Row(
@@ -189,7 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const Text(
                                   "GOLD",
                                   style: TextStyle(
-                                    color: Color(0xFFD4AF37),
+                                    color: Color(0xFFB08D57),
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1,
@@ -221,7 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Container(
                           width: 1,
                           height: 30,
-                          color: const Color(0xFFD4AF37).withOpacity(0.3),
+                          color: const Color(0xFFB08D57).withOpacity(0.3),
                         ),
                         Row(
                           children: [
@@ -270,7 +272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           },
                           child: const Icon(
                             Icons.sync,
-                            color: Color(0xFFD4AF37),
+                            color: Color(0xFFB08D57),
                             size: 18,
                           ),
                         ),
@@ -298,7 +300,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: const Color(0xFF111111),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: const Color(0xFFD4AF37).withOpacity(0.3),
+                              color: const Color(0xFFB08D57).withOpacity(0.3),
                             ),
                             image: DecorationImage(
                               image: AssetImage(banner['image']!),
@@ -330,7 +332,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Text(
                                       banner['title']!,
                                       style: const TextStyle(
-                                        color: Color(0xFFD4AF37),
+                                        color: Color(0xFFB08D57),
                                         fontSize: 16,
                                         fontFamily: 'serif',
                                         height: 1.2,
@@ -353,16 +355,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   padding: const EdgeInsets.only(bottom: 8.0),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: List.generate(_banners.length, (dotIndex) {
-                                      final isActive = _currentBannerIndex == dotIndex;
+                                    children: List.generate(_banners.length, (
+                                      dotIndex,
+                                    ) {
+                                      final isActive =
+                                          _currentBannerIndex == dotIndex;
                                       return AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
-                                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
                                         width: isActive ? 16 : 4,
                                         height: 4,
                                         decoration: BoxDecoration(
-                                          color: isActive ? const Color(0xFFD4AF37) : Colors.white30,
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: isActive
+                                              ? const Color(0xFFB08D57)
+                                              : Colors.white30,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                         ),
                                       );
                                     }),
@@ -385,7 +398,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           "🥇",
                           "TOTAL GOLD\nINVESTED",
                           "${formatGrams(totalGold)} gm",
-                          const Color(0xFFD4AF37),
+                          const Color(0xFFB08D57),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -405,7 +418,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _buildTrendCard(
                           Icons.trending_up,
-                          const Color(0xFFD4AF37),
+                          const Color(0xFFB08D57),
                           "CURRENT GOLD\nVALUE",
                           "₹ ${formatINR(currentGoldValue)}",
                         ),
@@ -428,9 +441,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _buildTrendCard(
                           Icons.lock_outline,
-                          const Color(0xFFD4AF37),
+                          const Color(0xFFB08D57),
                           "LOCKED GOLD",
                           "${formatGrams(lockedGold)} gm",
+                          buttonText: "VIEW",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const LockInScreen(metalType: 'gold'),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -440,100 +461,166 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Colors.grey,
                           "LOCKED SILVER",
                           "${formatGrams(lockedSilver)} gm",
+                          buttonText: "VIEW",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const LockInScreen(metalType: 'silver'),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  if (sipActive) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF121212),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.green.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.autorenew, color: Colors.green, size: 24),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      "ACTIVE SIP",
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                    InkWell(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const SipScreen(metalType: 'all'),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: const [
-                                          Text(
-                                            "VIEW ALL ",
-                                            style: TextStyle(
-                                              color: Colors.green,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Icon(
-                                            Icons.chevron_right,
-                                            color: Colors.green,
-                                            size: 14,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Total: ₹ ${formatINR(sipAmount)}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (data['sip_breakdown'] is Map)
-                                  ...((data['sip_breakdown'] as Map).entries.map((e) => Text(
-                                    "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
-                                    style: const TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ))),
-                              ],
+                  // Quick Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionRow(
+                          "🥇",
+                          "GOLD",
+                          "24K Gold",
+                          const Color(0xFFB08D57),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BuyFlowScreen(),
                             ),
                           ),
-                        ],
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SellFlowScreen(),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildActionRow(
+                          "🥈",
+                          "SILVER",
+                          "999 Silver",
+                          Colors.grey,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BuySilverFlowScreen(),
+                            ),
+                          ),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SellFlowScreen(
+                                initialMetalType: 'silver',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // if (sipActive) ...[
+                  //   Container(
+                  //     padding: const EdgeInsets.all(16),
+                  //     decoration: BoxDecoration(
+                  //       color: const Color(0xFF121212),
+                  //       borderRadius: BorderRadius.circular(16),
+                  //       border: Border.all(
+                  //         color: Colors.green.withOpacity(0.3),
+                  //       ),
+                  //     ),
+                  //     child: Row(
+                  //       children: [
+                  //         Container(
+                  //           padding: const EdgeInsets.all(8),
+                  //           decoration: BoxDecoration(
+                  //             color: Colors.green.withOpacity(0.1),
+                  //             borderRadius: BorderRadius.circular(8),
+                  //           ),
+                  //           child: const Icon(
+                  //             Icons.autorenew,
+                  //             color: Colors.green,
+                  //             size: 24,
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 16),
+                  //         Expanded(
+                  //           child: Column(
+                  //             crossAxisAlignment: CrossAxisAlignment.start,
+                  //             children: [
+                  //               Row(
+                  //                 mainAxisAlignment:
+                  //                     MainAxisAlignment.spaceBetween,
+                  //                 children: [
+                  //                   const Text(
+                  //                     "ACTIVE SIP",
+                  //                     style: TextStyle(
+                  //                       color: Colors.green,
+                  //                       fontSize: 10,
+                  //                       fontWeight: FontWeight.bold,
+                  //                       letterSpacing: 1,
+                  //                     ),
+                  //                   ),
+                  //                   InkWell(
+                  //                     onTap: () => Navigator.push(
+                  //                       context,
+                  //                       MaterialPageRoute(
+                  //                         builder: (_) =>
+                  //                             const SipScreen(metalType: 'all'),
+                  //                       ),
+                  //                     ),
+                  //                     child: Row(
+                  //                       children: const [
+                  //                         Text(
+                  //                           "VIEW ALL ",
+                  //                           style: TextStyle(
+                  //                             color: Colors.green,
+                  //                             fontSize: 10,
+                  //                             fontWeight: FontWeight.bold,
+                  //                           ),
+                  //                         ),
+                  //                         Icon(
+                  //                           Icons.chevron_right,
+                  //                           color: Colors.green,
+                  //                           size: 14,
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ),
+                  //                 ],
+                  //               ),
+                  //               const SizedBox(height: 4),
+                  //               Text(
+                  //                 "Total: ₹ ${formatINR(sipAmount)}",
+                  //                 style: const TextStyle(
+                  //                   color: Colors.white,
+                  //                   fontSize: 16,
+                  //                   fontWeight: FontWeight.bold,
+                  //                 ),
+                  //               ),
+                  //               if (data['sip_breakdown'] is Map)
+                  //                 ...((data['sip_breakdown'] as Map).entries.map(
+                  //                   (e) => Text(
+                  //                     "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
+                  //                     style: const TextStyle(
+                  //                       color: Colors.green,
+                  //                       fontSize: 12,
+                  //                       fontWeight: FontWeight.bold,
+                  //                     ),
+                  //                   ),
+                  //                 )),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  //   const SizedBox(height: 16),
+                  // ],
 
                   // Total Portfolio Value
                   Container(
@@ -542,7 +629,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: const Color(0xFF121212),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFD4AF37).withOpacity(0.3),
+                        color: const Color(0xFFB08D57).withOpacity(0.3),
                       ),
                     ),
                     child: Column(
@@ -555,13 +642,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.black,
                                 border: Border.all(
-                                  color: const Color(0xFFD4AF37),
+                                  color: const Color(0xFFB08D57),
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
                                 Icons.account_balance_wallet,
-                                color: Color(0xFFD4AF37),
+                                color: Color(0xFFB08D57),
                                 size: 18,
                               ),
                             ),
@@ -569,7 +656,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const Text(
                               "TOTAL PORTFOLIO VALUE",
                               style: TextStyle(
-                                color: Color(0xFFD4AF37),
+                                color: Color(0xFFB08D57),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1,
@@ -607,54 +694,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Quick Actions
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildActionRow(
-                          "🥇",
-                          "GOLD",
-                          "24K Gold",
-                          const Color(0xFFD4AF37),
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const BuyFlowScreen(),
-                            ),
-                          ),
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SellFlowScreen(),
-                            ),
-                          ),
+                  if (sipActive) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF121212),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.green.withOpacity(0.3),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildActionRow(
-                          "🥈",
-                          "SILVER",
-                          "999 Silver",
-                          Colors.grey,
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const BuySilverFlowScreen(),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.autorenew,
+                              color: Colors.green,
+                              size: 24,
                             ),
                           ),
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const SellFlowScreen(initialMetalType: 'silver'),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      "ACTIVE SIP",
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const SipScreen(metalType: 'all'),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: const [
+                                          Text(
+                                            "VIEW ALL ",
+                                            style: TextStyle(
+                                              color: Colors.green,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            color: Colors.green,
+                                            size: 14,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Total: ₹ ${formatINR(sipAmount)}",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (data['sip_breakdown'] is Map)
+                                  ...((data['sip_breakdown'] as Map).entries.map(
+                                    (e) => Text(
+                                      "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )),
+                              ],
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   const SizedBox(height: 24),
 
                   // Recent Transactions
@@ -664,7 +801,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const Text(
                         "RECENT TRANSACTIONS",
                         style: TextStyle(
-                          color: Color(0xFFD4AF37),
+                          color: Color(0xFFB08D57),
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
@@ -682,14 +819,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Text(
                               "VIEW ALL ",
                               style: TextStyle(
-                                color: Color(0xFFD4AF37),
+                                color: Color(0xFFB08D57),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Icon(
                               Icons.chevron_right,
-                              color: Color(0xFFD4AF37),
+                              color: Color(0xFFB08D57),
                               size: 14,
                             ),
                           ],
@@ -727,7 +864,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -767,14 +904,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     IconData icon,
     Color color,
     String title,
-    String value,
-  ) {
+    String value, {
+    VoidCallback? onTap,
+    String? buttonText,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -804,13 +943,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (onTap != null && buttonText != null)
+                InkWell(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: color.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      buttonText,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -939,7 +1106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -951,10 +1118,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFFD4AF37).withOpacity(0.5),
+                    color: const Color(0xFFB08D57).withOpacity(0.5),
                   ),
                 ),
-                child: Icon(iconData, color: const Color(0xFFD4AF37), size: 14),
+                child: Icon(iconData, color: const Color(0xFFB08D57), size: 14),
               ),
               const SizedBox(width: 8),
               Column(
@@ -971,7 +1138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     "$grams gm",
                     style: const TextStyle(
-                      color: Color(0xFFD4AF37),
+                      color: Color(0xFFB08D57),
                       fontSize: 9,
                     ),
                   ),

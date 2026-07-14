@@ -116,7 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Text(
         title.toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFFFFD700),
+          color: Color(0xFFB08D57),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.5,
@@ -140,7 +140,7 @@ class _SignupScreenState extends State<SignupScreen> {
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFFFFD700), size: 20),
+          prefixIcon: Icon(icon, color: const Color(0xFFB08D57), size: 20),
         ),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {

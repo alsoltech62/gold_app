@@ -12,7 +12,7 @@ class AboutScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Digital Gold', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+            Text('Digital Gold', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFB08D57))),
             SizedBox(height: 20),
             Text(
               'Welcome to the most sophisticated digital gold platform. We provide 24K pure gold, insured, BIS Hallmarked, and highly liquid. Buy, sell, and save in gold effortlessly with our Auto SIP and easy wallet system.',

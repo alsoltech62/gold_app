@@ -116,7 +116,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Redeemable Balance', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('${balance.toStringAsFixed(4)} gms', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _selectedMetal == 'silver' ? Colors.grey.shade300 : const Color(0xFFFFD700))),
+                  Text('${balance.toStringAsFixed(4)} gms', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _selectedMetal == 'silver' ? Colors.grey.shade300 : const Color(0xFFB08D57))),
                 ],
               ),
             ),
@@ -266,7 +266,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Estimated Cost', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('₹$total', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+              Text('₹$total', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB08D57))),
             ],
           ),
         ],
@@ -291,14 +291,14 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD4AF37) : Colors.transparent,
-          border: Border.all(color: const Color(0xFFD4AF37)),
+          color: isSelected ? const Color(0xFFB08D57) : Colors.transparent,
+          border: Border.all(color: const Color(0xFFB08D57)),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.black : const Color(0xFFD4AF37),
+            color: isSelected ? Colors.black : const Color(0xFFB08D57),
             fontWeight: FontWeight.bold,
           ),
         ),

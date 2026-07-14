@@ -159,7 +159,7 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
   }  @override
   Widget build(BuildContext context) {
     final isGold = _currentMetalType == 'gold';
-    final themeColor = isGold ? const Color(0xFFFFD700) : const Color(0xFFE5E7EB);
+    final themeColor = isGold ? const Color(0xFFB08D57) : const Color(0xFFE5E7EB);
     
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
@@ -530,6 +530,167 @@ class _LockInScreenState extends State<LockInScreen> with SingleTickerProviderSt
                   ],
                 ),
                 const SizedBox(height: 30),
+                
+                // History Section
+                if (filteredHistory.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Your Lock-In Portfolio',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: themeColor.withOpacity(0.2),
+                          border: Border.all(color: themeColor.withOpacity(0.5)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${filteredHistory.length} ACTIVE PLANS',
+                          style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ...filteredHistory.map((h) {
+                    final progress = double.tryParse(h['progress_percentage'].toString()) ?? 0.0;
+                    final grams = double.tryParse(h['grams'].toString()) ?? 0.0;
+                    final returnPercentage = double.tryParse(h['return_percentage'].toString()) ?? 0.0;
+                    final estimatedExtra = double.tryParse(h['estimated_extra'].toString()) ?? 0.0;
+                    final startDate = DateTime.tryParse(h['start_date'].toString()) ?? DateTime.now();
+                    final endDate = DateTime.tryParse(h['end_date'].toString()) ?? DateTime.now();
+                    final daysRemaining = h['days_remaining']?.toString() ?? '0';
+                    final planName = h['plan_name']?.toString() ?? '';
+                    final hMetalType = h['metal_type']?.toString().toUpperCase() ?? 'GOLD';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF111111),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${_formatGrams(grams)} gm',
+                                    style: TextStyle(color: themeColor, fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$hMetalType LOCKED',
+                                    style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      border: Border.all(color: Colors.green.withOpacity(0.2)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.trending_up, color: Colors.green, size: 12),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '+$returnPercentage%',
+                                          style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    planName.toUpperCase(),
+                                    style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Progress Bar
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('MATURITY PROGRESS', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                              Text('${progress.floor()}%', style: TextStyle(color: themeColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress / 100,
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(DateFormat('dd MMM yy').format(startDate), style: const TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                              Text('$daysRemaining DAYS LEFT', style: const TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              border: Border.all(color: Colors.white.withOpacity(0.05)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('EST. EXTRA $hMetalType', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                    const SizedBox(height: 2),
+                                    Text('+${_formatGrams(estimatedExtra)}', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Text('MATURITY DATE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                    const SizedBox(height: 2),
+                                    Text(DateFormat('dd MMM yyyy').format(endDate), style: TextStyle(color: themeColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 200.ms);
+                  }),
+                  const SizedBox(height: 20),
+                ],
               ],
             ),
           );

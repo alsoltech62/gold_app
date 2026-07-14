@@ -55,7 +55,7 @@ class _ReferScreenState extends State<ReferScreen> {
     final referralCode = user?['mobile'] ?? '';
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)));
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)));
     }
 
     return SafeArea(
@@ -72,7 +72,7 @@ class _ReferScreenState extends State<ReferScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +82,7 @@ class _ReferScreenState extends State<ReferScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(referralCode, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFFFD700), letterSpacing: 2)),
+                      Text(referralCode, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFB08D57), letterSpacing: 2)),
                       IconButton(
                         icon: const Icon(Icons.copy, color: Colors.white),
                         onPressed: () {
@@ -148,7 +148,7 @@ class _ReferScreenState extends State<ReferScreen> {
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
                             backgroundColor: const Color(0xFF1E1E1E),
-                            child: Text(u['name'][0].toUpperCase(), style: const TextStyle(color: Color(0xFFFFD700))),
+                            child: Text(u['name'][0].toUpperCase(), style: const TextStyle(color: Color(0xFFB08D57))),
                           ),
                           title: Text(u['name'], style: const TextStyle(color: Colors.white)),
                           subtitle: Text('Joined: ${u['created_at'].split(' ')[0]}', style: const TextStyle(color: Colors.grey, fontSize: 12)),

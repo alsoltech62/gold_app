@@ -28,14 +28,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: Consumer<AdminProvider>(
         builder: (context, admin, child) {
           if (admin.isLoading && admin.adminStats == null) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)));
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)));
           }
 
           final stats = admin.adminStats ?? {};
 
           return RefreshIndicator(
             onRefresh: () => admin.fetchAdminDashboard(),
-            color: const Color(0xFFFFD700),
+            color: const Color(0xFFB08D57),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
@@ -91,7 +91,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: const Color(0xFFFFD700), size: 30),
+          Icon(icon, color: const Color(0xFFB08D57), size: 30),
           const SizedBox(height: 10),
           Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
           const SizedBox(height: 5),
@@ -120,7 +120,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFFFFD700)),
+        leading: Icon(icon, color: const Color(0xFFB08D57)),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),

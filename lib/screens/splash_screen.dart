@@ -163,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        const Color(0xFFFFD700).withOpacity(0.08 * _glowAnim.value),
+                        const Color(0xFFB08D57).withOpacity(0.08 * _glowAnim.value),
                         const Color(0xFFB8860B).withOpacity(0.04 * _glowAnim.value),
                         Colors.transparent,
                       ],
@@ -186,8 +186,8 @@ class _SplashScreenState extends State<SplashScreen>
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFD4AF37).withOpacity(0.12 * _pulseAnim.value),
-                      const Color(0xFFFFD700).withOpacity(0.05 * _pulseAnim.value),
+                      const Color(0xFFB08D57).withOpacity(0.12 * _pulseAnim.value),
+                      const Color(0xFFB08D57).withOpacity(0.05 * _pulseAnim.value),
                       Colors.transparent,
                     ],
                   ),
@@ -219,7 +219,7 @@ class _SplashScreenState extends State<SplashScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFFFD700).withOpacity(0.15 * _ringAnim.value),
+                        color: const Color(0xFFB08D57).withOpacity(0.15 * _ringAnim.value),
                         width: 1,
                       ),
                     ),
@@ -239,7 +239,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: _DashedRing(
                     radius: 220,
                     dashCount: 24,
-                    color: const Color(0xFFD4AF37).withOpacity(0.25),
+                    color: const Color(0xFFB08D57).withOpacity(0.25),
                     dashWidth: 12,
                     strokeWidth: 1.5,
                   ),
@@ -258,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: _DashedRing(
                     radius: 168,
                     dashCount: 16,
-                    color: const Color(0xFFFFD700).withOpacity(0.3),
+                    color: const Color(0xFFB08D57).withOpacity(0.3),
                     dashWidth: 8,
                     strokeWidth: 1.2,
                   ),
@@ -281,14 +281,14 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFFFFD700).withOpacity(0.18 * _glowAnim.value),
+                          const Color(0xFFB08D57).withOpacity(0.18 * _glowAnim.value),
                           const Color(0xFFB8860B).withOpacity(0.10 * _glowAnim.value),
                           Colors.transparent,
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFD700).withOpacity(0.25 * _glowAnim.value),
+                          color: const Color(0xFFB08D57).withOpacity(0.25 * _glowAnim.value),
                           blurRadius: 80,
                           spreadRadius: 20,
                         ),
@@ -323,19 +323,19 @@ class _SplashScreenState extends State<SplashScreen>
                           ],
                         ),
                         border: Border.all(
-                          color: const Color(0xFFFFD700)
+                          color: const Color(0xFFB08D57)
                               .withOpacity(0.5 + 0.3 * _glowAnim.value),
                           width: 1.8,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFD700)
+                            color: const Color(0xFFB08D57)
                                 .withOpacity(0.35 * _glowAnim.value),
                             blurRadius: 40 + 20 * _pulseAnim.value,
                             spreadRadius: 4 + 4 * _pulseAnim.value,
                           ),
                           BoxShadow(
-                            color: const Color(0xFFD4AF37)
+                            color: const Color(0xFFB08D57)
                                 .withOpacity(0.15 * _glowAnim.value),
                             blurRadius: 80,
                             spreadRadius: 10,
@@ -375,11 +375,11 @@ class _SplashScreenState extends State<SplashScreen>
                     shaderCallback: (bounds) => const LinearGradient(
                       colors: [
                         Color(0xFFFFE066),
-                        Color(0xFFFFD700),
-                        Color(0xFFD4AF37),
+                        Color(0xFFB08D57),
+                        Color(0xFFB08D57),
                         Color(0xFFB8860B),
-                        Color(0xFFD4AF37),
-                        Color(0xFFFFD700),
+                        Color(0xFFB08D57),
+                        Color(0xFFB08D57),
                         Color(0xFFFFE066),
                       ],
                       stops: [0.0, 0.15, 0.35, 0.5, 0.65, 0.85, 1.0],
@@ -414,7 +414,7 @@ class _SplashScreenState extends State<SplashScreen>
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 5,
-                      color: const Color(0xFFD4AF37).withOpacity(0.7),
+                      color: const Color(0xFFB08D57).withOpacity(0.7),
                     ),
                   )
                   .animate()
@@ -442,7 +442,7 @@ class _SplashScreenState extends State<SplashScreen>
                           gradient: LinearGradient(
                             colors: [
                               Colors.transparent,
-                              const Color(0xFFFFD700).withOpacity(0.8),
+                              const Color(0xFFB08D57).withOpacity(0.8),
                             ],
                           ),
                         ),
@@ -453,7 +453,7 @@ class _SplashScreenState extends State<SplashScreen>
                         height: 6,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFFFFD700),
+                          color: Color(0xFFB08D57),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -463,7 +463,7 @@ class _SplashScreenState extends State<SplashScreen>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFFFFD700).withOpacity(0.8),
+                              const Color(0xFFB08D57).withOpacity(0.8),
                               Colors.transparent,
                             ],
                           ),
@@ -500,7 +500,7 @@ class _SplashScreenState extends State<SplashScreen>
                   'Securing your wealth...',
                   style: GoogleFonts.lexend(
                     fontSize: 11,
-                    color: const Color(0xFFD4AF37).withOpacity(0.45),
+                    color: const Color(0xFFB08D57).withOpacity(0.45),
                     letterSpacing: 1.5,
                     fontWeight: FontWeight.w400,
                   ),
@@ -689,7 +689,7 @@ class _ParticlePainter extends CustomPainter {
       final y = cy + r * math.sin(angle) * 0.9;
       final alpha = ((0.2 + 0.8 * progress) * (p[3] as double)).clamp(0.0, 1.0);
 
-      paint.color = const Color(0xFFFFD700).withOpacity(alpha);
+      paint.color = const Color(0xFFB08D57).withOpacity(alpha);
       canvas.drawCircle(Offset(x, y), p[2] as double, paint);
     }
   }
@@ -708,7 +708,7 @@ class _GoldDividerDot extends StatelessWidget {
       height: 4,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFD4AF37).withOpacity(0.5),
+        color: const Color(0xFFB08D57).withOpacity(0.5),
       ),
     );
   }
@@ -736,7 +736,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFD4AF37).withOpacity(0.45)
+      ..color = const Color(0xFFB08D57).withOpacity(0.45)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -750,7 +750,7 @@ class _CornerPainter extends CustomPainter {
 
     // Small diamond
     final dp = Paint()
-      ..color = const Color(0xFFFFD700).withOpacity(0.6)
+      ..color = const Color(0xFFB08D57).withOpacity(0.6)
       ..style = PaintingStyle.fill;
     final c = Offset(0, 0);
     canvas.drawCircle(c, 2.5, dp);
@@ -811,10 +811,10 @@ class _AnimatedLoadingDotsState extends State<_AnimatedLoadingDots>
             height: i == 2 ? 10 : 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFFFD700).withOpacity(_anims[i].value),
+              color: const Color(0xFFB08D57).withOpacity(_anims[i].value),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFD700)
+                  color: const Color(0xFFB08D57)
                       .withOpacity(0.5 * _anims[i].value),
                   blurRadius: 8,
                   spreadRadius: 1,

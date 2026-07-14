@@ -80,7 +80,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
         backgroundColor: const Color(0xFF111111),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: const Color(0xFFFFD700).withOpacity(0.3)),
+          side: BorderSide(color: const Color(0xFFB08D57).withOpacity(0.3)),
         ),
         title: const Text('Complete UPI Payment', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         content: Column(
@@ -99,7 +99,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text('goldbindia@oksbi', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1)),
+                    child: Text('goldbindia@oksbi', style: TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1)),
                   ),
                   InkWell(
                     onTap: () {
@@ -119,7 +119,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
                 labelText: 'UTR / Reference ID',
                 labelStyle: TextStyle(color: Colors.white54),
                 enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFFFD700))),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFB08D57))),
               ),
             ),
           ],
@@ -130,7 +130,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
             child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), foregroundColor: Colors.black),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB08D57), foregroundColor: Colors.black),
             onPressed: () async {
               if (utrController.text.length < 6) return;
               Navigator.pop(dialogContext);
@@ -178,13 +178,13 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFFD700)),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFB08D57)),
               onChanged: _calculateGrams,
               decoration: const InputDecoration(
                 labelText: 'Enter Amount',
                 prefixText: '₹ ',
-                prefixStyle: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFFD700)),
-                suffixIcon: Icon(Icons.currency_rupee, color: Color(0xFFFFD700)),
+                prefixStyle: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFB08D57)),
+                suffixIcon: Icon(Icons.currency_rupee, color: Color(0xFFB08D57)),
               ),
             ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
             const SizedBox(height: 20),
@@ -192,18 +192,18 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFD700).withOpacity(0.1),
+                  color: const Color(0xFFB08D57).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.stars, color: Color(0xFFFFD700), size: 18),
+                    const Icon(Icons.stars, color: Color(0xFFB08D57), size: 18),
                     const SizedBox(width: 10),
                     Text(
                       'You will receive: ${_grams.toStringAsFixed(4)} grams',
-                      style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

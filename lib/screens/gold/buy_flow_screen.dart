@@ -29,7 +29,7 @@ class BuyFlowScreen extends StatelessWidget {
               title: 'Invest One Time',
               subtitle: 'Make a single purchase at the current market rate and add it directly to your vault.',
               icon: Icons.shopping_cart,
-              color: const Color(0xFFFFD700),
+              color: const Color(0xFFB08D57),
               target: const BuyGoldScreen(),
             ).animate().slideX(),
             

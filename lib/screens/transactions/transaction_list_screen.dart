@@ -25,7 +25,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       body: Consumer<GoldProvider>(
         builder: (context, gold, child) {
           if (gold.isLoading && gold.transactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)));
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)));
           }
 
           if (gold.transactions.isEmpty) {

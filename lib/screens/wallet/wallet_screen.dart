@@ -586,7 +586,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFFD700),
+                                  color: Color(0xFFB08D57),
                                 ),
                               ),
                             ],
@@ -627,7 +627,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         trailing: Text(
                           '+${txn['gold_grams']}g',
                           style: const TextStyle(
-                            color: Color(0xFFFFD700),
+                            color: Color(0xFFB08D57),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

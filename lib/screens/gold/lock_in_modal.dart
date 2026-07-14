@@ -24,10 +24,10 @@ class LockInModal {
             decoration: BoxDecoration(
               color: const Color(0xFF121212),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFD700).withOpacity(0.1),
+                  color: const Color(0xFFB08D57).withOpacity(0.1),
                   blurRadius: 30,
                   spreadRadius: 5,
                 )
@@ -46,10 +46,10 @@ class LockInModal {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700).withOpacity(0.1),
+                    color: const Color(0xFFB08D57).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.lock, color: Color(0xFFFFD700), size: 40),
+                  child: const Icon(Icons.lock, color: Color(0xFFB08D57), size: 40),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -72,7 +72,7 @@ class LockInModal {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.security, color: Color(0xFFFFD700), size: 16),
+                      const Icon(Icons.security, color: Color(0xFFB08D57), size: 16),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -93,7 +93,7 @@ class LockInModal {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => LockInScreen(metalType: metalType)));
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
+                      backgroundColor: const Color(0xFFB08D57),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     ),
                     child: Text(primaryActionText, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),

@@ -133,16 +133,16 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
           widget.metalType == 'all' 
             ? 'My SIP Plans' 
             : 'My ${widget.metalType == 'silver' ? 'Silver' : 'Gold'} SIPs',
-          style: const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFD4AF37)),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFB08D57)),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: widget.metalType == 'all' ? null : TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFD4AF37),
-          labelColor: const Color(0xFFD4AF37),
+          indicatorColor: const Color(0xFFB08D57),
+          labelColor: const Color(0xFFB08D57),
           unselectedLabelColor: Colors.grey,
           tabs: const [
             Tab(text: 'MY SIPS'),
@@ -169,7 +169,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
         final sipData = provider.sipHistory;
 
         if (sipData == null) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)));
         }
 
         final activeSips = (sipData['active_sips'] as List?) ?? [];
@@ -178,7 +178,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
         final List history = sipData['history'] ?? [];
 
         return RefreshIndicator(
-          color: const Color(0xFFD4AF37),
+          color: const Color(0xFFB08D57),
           onRefresh: () => provider.fetchSipHistory(metalType: widget.metalType),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -213,7 +213,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                         ElevatedButton(
                           onPressed: () => _tabController.animateTo(1),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFD4AF37),
+                            backgroundColor: const Color(0xFFB08D57),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           child: const Text('Set Up SIP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
@@ -224,7 +224,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                 ] else ...[
                   const Text(
                     'ACTIVE SIP PLANS',
-                    style: TextStyle(color: Color(0xFFD4AF37), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    style: TextStyle(color: Color(0xFFB08D57), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                   const SizedBox(height: 10),
                   ...activeSips.map((sip) => _buildActiveSipCard(sip)).toList(),
@@ -235,7 +235,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                 // Monitoring stats
                 const Text(
                   'SIP INSTALLMENT MONITORING',
-                  style: TextStyle(color: Color(0xFFD4AF37), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(color: Color(0xFFB08D57), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -245,7 +245,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                     Expanded(child: _buildStatCard(
                       widget.metalType == 'all' ? 'Metal Accumulated' : '${widget.metalType == 'silver' ? 'Silver' : 'Gold'} Accumulated', 
                       '${totalGold.toStringAsFixed(4)}g', 
-                      widget.metalType == 'silver' ? Colors.grey : const Color(0xFFD4AF37)
+                      widget.metalType == 'silver' ? Colors.grey : const Color(0xFFB08D57)
                     )),
                   ],
                 ),
@@ -255,7 +255,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                 // Transaction history
                 const Text(
                   'INSTALLMENT HISTORY',
-                  style: TextStyle(color: Color(0xFFD4AF37), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(color: Color(0xFFB08D57), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                 ),
                 const SizedBox(height: 10),
 
@@ -344,12 +344,12 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: metal == 'silver' ? Colors.grey.withOpacity(0.1) : const Color(0xFFD4AF37).withOpacity(0.1),
+                        color: metal == 'silver' ? Colors.grey.withOpacity(0.1) : const Color(0xFFB08D57).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         metal.toUpperCase(),
-                        style: TextStyle(color: metal == 'silver' ? Colors.grey : const Color(0xFFD4AF37), fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: metal == 'silver' ? Colors.grey : const Color(0xFFB08D57), fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -436,7 +436,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +526,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 10),
                 if (_plans.isEmpty)
-                  const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)))
+                  const Center(child: CircularProgressIndicator(color: Color(0xFFB08D57)))
                 else
                   SizedBox(
                     height: 100,

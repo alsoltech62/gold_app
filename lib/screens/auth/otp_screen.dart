@@ -132,7 +132,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     textAlign: TextAlign.center,
                     maxLength: 6,
                     style: const TextStyle(
-                      color: Color(0xFFFFD700),
+                      color: Color(0xFFB08D57),
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 10,
@@ -176,12 +176,12 @@ class _OtpScreenState extends State<OtpScreen> {
                   const SizedBox(height: 20),
                   Center(
                     child: _isResending 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFFFFD700), strokeWidth: 2))
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFFB08D57), strokeWidth: 2))
                       : TextButton(
                           onPressed: _canResend ? _handleResend : null,
                           child: Text(
                             _canResend ? 'Resend Code' : 'Resend Code in ${_resendTimer}s',
-                            style: TextStyle(color: _canResend ? const Color(0xFFFFD700) : Colors.grey),
+                            style: TextStyle(color: _canResend ? const Color(0xFFB08D57) : Colors.grey),
                           ),
                         ),
                   ),
