@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:goldapp/providers/admin_provider.dart';
 import 'package:goldapp/screens/admin/admin_update_rate_screen.dart';
+import 'package:goldapp/screens/admin/admin_lockin_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/gold_provider.dart';
 
@@ -106,6 +107,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       children: [
         _buildActionTile(Icons.trending_up, 'Update Gold Rate', 'Set daily price per gram', () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminUpdateRateScreen()));
+        }),
+        _buildActionTile(Icons.lock_clock, 'Manage Lock-in Plans', 'Create, edit, or delete plans', () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLockinScreen()));
         }),
         _buildActionTile(Icons.person_add, 'Manage Customers', 'Add, edit or block users', () {}),
         _buildActionTile(Icons.list_alt, 'Manage Transactions', 'Approve sell/delivery requests', () {}),

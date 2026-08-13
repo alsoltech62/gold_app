@@ -45,7 +45,7 @@ class GoldApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GoldBarPay',
+      title: 'GoldBarPe',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: const SplashScreen(),

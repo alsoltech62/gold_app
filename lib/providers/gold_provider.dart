@@ -206,7 +206,7 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> buyGold(double amountInr, String paymentMethod, String paymentId, {String? razorpayOrderId, String? razorpaySignature}) async {
+  Future<Map<String, dynamic>> buyGold(double amountInr, String paymentMethod, String paymentId, {String? cashfreeOrderId}) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -215,8 +215,7 @@ class GoldProvider with ChangeNotifier {
         'payment_method': paymentMethod,
         'payment_id': paymentId,
       };
-      if (razorpayOrderId != null) body['razorpay_order_id'] = razorpayOrderId;
-      if (razorpaySignature != null) body['razorpay_signature'] = razorpaySignature;
+      if (cashfreeOrderId != null) body['cashfree_order_id'] = cashfreeOrderId;
       
       final response = await _apiClient.post('/api/gold/buy.php', body);
       _isLoading = false;
@@ -252,7 +251,7 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> buySilver(double amountInr, String paymentMethod, {String? paymentId, String? razorpayOrderId, String? razorpaySignature}) async {
+  Future<Map<String, dynamic>> buySilver(double amountInr, String paymentMethod, {String? paymentId, String? cashfreeOrderId}) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -261,8 +260,7 @@ class GoldProvider with ChangeNotifier {
         'payment_method': paymentMethod,
       };
       if (paymentId != null) body['payment_id'] = paymentId;
-      if (razorpayOrderId != null) body['razorpay_order_id'] = razorpayOrderId;
-      if (razorpaySignature != null) body['razorpay_signature'] = razorpaySignature;
+      if (cashfreeOrderId != null) body['cashfree_order_id'] = cashfreeOrderId;
 
       final response = await _apiClient.post('/api/silver/buy.php', body);
       _isLoading = false;

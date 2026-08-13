@@ -153,14 +153,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  eventify:
-    dependency: transitive
-    description:
-      name: eventify
-      sha256: b829429f08586cc2001c628e7499e3e3c2493a1d895fd73b00ecb23351aa5a66
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   fake_async:
     dependency: transitive
     description:
@@ -286,6 +278,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
+  flutter_cashfree_pg_sdk:
+    dependency: "direct main"
+    description:
+      name: flutter_cashfree_pg_sdk
+      sha256: "94d618057ffa7721b2bdc97dd0d0ad7f22df2a30ac66b3991a7fd65e6f15e64d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.0+52"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -760,14 +760,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
-  razorpay_flutter:
-    dependency: "direct main"
-    description:
-      name: razorpay_flutter
-      sha256: a9026acf004df802128be6996a9397f5e9c20f32dd12ab215fd1659e0233c9f0
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.5"
   record_use:
     dependency: transitive
     description:
@@ -925,6 +917,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  url_launcher:
+    dependency: "direct main"
+    description:
+      name: url_launcher
+      sha256: f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.2"
+  url_launcher_android:
+    dependency: transitive
+    description:
+      name: url_launcher_android
+      sha256: "17bc677f0b301615530dd1d67e0a9828cafa2d0b6b6eae4cd3679b7eac4a273c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.30"
+  url_launcher_ios:
+    dependency: transitive
+    description:
+      name: url_launcher_ios
+      sha256: "580fe5dfb51671ae38191d316e027f6b76272b026370708c2d898799750a02b0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.4.1"
   url_launcher_linux:
     dependency: transitive
     description:
@@ -933,6 +949,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.2"
+  url_launcher_macos:
+    dependency: transitive
+    description:
+      name: url_launcher_macos
+      sha256: "368adf46f71ad3c21b8f06614adb38346f193f3a59ba8fe9a2fd74133070ba18"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.5"
   url_launcher_platform_interface:
     dependency: transitive
     description:

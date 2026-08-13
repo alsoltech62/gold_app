@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static const String baseUrl =
-      'https://goldpay.odofast.in/backend'; // Update with actual URL
+      'https://goldbarpe.com/backend'; // Update with actual URL
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -105,6 +105,25 @@ class ApiClient {
       return jsonDecode(response.body);
     } catch (e) {
       print('DEBUG: API Error on PUT $url: $e');
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> delete(String endpoint) async {
+    final token = await _getToken();
+    final url = '$baseUrl$endpoint';
+    final headers = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+
+    print('DEBUG: Requesting DELETE $url');
+    try {
+      final response = await http.delete(Uri.parse(url), headers: headers);
+      _log('DELETE', url, null, headers, response);
+      return jsonDecode(response.body);
+    } catch (e) {
+      print('DEBUG: API Error on DELETE $url: $e');
       return {'success': false, 'message': e.toString()};
     }
   }

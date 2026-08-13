@@ -5,6 +5,14 @@ import 'package:flutter/services.dart';
 import '../../providers/gold_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'lock_in_screen.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cfpayment/cfdropcheckoutpayment.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cfpaymentcomponents/cfpaymentcomponent.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cfpaymentgateway/cfpaymentgatewayservice.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cfsession/cfsession.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cftheme/cftheme.dart';
+import 'package:flutter_cashfree_pg_sdk/utils/cfenums.dart';
+import 'package:flutter_cashfree_pg_sdk/utils/cfexceptions.dart';
+import 'package:flutter_cashfree_pg_sdk/api/cferrorresponse/cferrorresponse.dart';
 
 class BuyGoldScreen extends StatefulWidget {
   const BuyGoldScreen({super.key});
@@ -16,8 +24,35 @@ class BuyGoldScreen extends StatefulWidget {
 class _BuyGoldScreenState extends State<BuyGoldScreen> {
   final _amountController = TextEditingController();
   double _grams = 0.0;
-  String _paymentMethod = 'UPI';
+  String _paymentMethod = 'CASHFREE';
   bool _isProcessingPayment = false;
+  
+  var cfPaymentGatewayService = CFPaymentGatewayService();
+
+  @override
+  void initState() {
+    super.initState();
+    cfPaymentGatewayService.setCallback(verifyPayment, onError);
+  }
+
+  void verifyPayment(String orderId) async {
+    final goldProvider = Provider.of<GoldProvider>(context, listen: false);
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    
+    final result = await goldProvider.buyGold(amount, 'CASHFREE', 'WALLET_TXN', cashfreeOrderId: orderId);
+    if (!mounted) return;
+    
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gold purchased successfully!')));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LockInScreen(metalType: 'gold')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Transaction failed.'), backgroundColor: Colors.red));
+    }
+  }
+
+  void onError(CFErrorResponse errorResponse, String orderId) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorResponse.getMessage() ?? 'Payment failed'), backgroundColor: Colors.red));
+  }
 
   @override
   void dispose() {
@@ -48,12 +83,30 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
 
     final goldProvider = Provider.of<GoldProvider>(context, listen: false);
 
-    if (_paymentMethod == 'RAZORPAY') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Razorpay is currently disabled for maintenance. Please use Manual UPI.'), backgroundColor: Colors.red));
+    if (_paymentMethod == 'CASHFREE') {
+      setState(() => _isProcessingPayment = true);
+      final response = await goldProvider.createPaymentOrder(amount);
+      if (response['success'] == true) {
+        final paymentSessionId = response['data']['payment_session_id'];
+        final orderId = response['data']['order_id'];
+        
+        try {
+          var session = CFSessionBuilder().setEnvironment(CFEnvironment.PRODUCTION).setOrderId(orderId).setPaymentSessionId(paymentSessionId).build();
+          var theme = CFThemeBuilder().setNavigationBarBackgroundColorColor("#B08D57").setNavigationBarTextColor("#FFFFFF").setButtonBackgroundColor("#B08D57").setButtonTextColor("#FFFFFF").setPrimaryTextColor("#000000").setSecondaryTextColor("#000000").build();
+          var cfDropCheckoutPayment = CFDropCheckoutPaymentBuilder().setSession(session).setTheme(theme).build();
+          
+          cfPaymentGatewayService.doPayment(cfDropCheckoutPayment);
+        } on CFException catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? 'Could not create order'), backgroundColor: Colors.red));
+      }
+      setState(() => _isProcessingPayment = false);
       return;
     }
 
-    if (_paymentMethod != 'UPI') {
+    if (_paymentMethod != 'UPI' && _paymentMethod != 'CASHFREE') {
       final result = await goldProvider.buyGold(amount, _paymentMethod, 'WALLET_TXN');
       if (!mounted) return;
       if (result['success'] == true) {
@@ -239,8 +292,8 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               value: _paymentMethod,
               decoration: const InputDecoration(labelText: 'Payment Method'),
               items: const [
+                DropdownMenuItem(value: 'CASHFREE', child: Text('Direct / UPI / Cards (Cashfree)')),
                 DropdownMenuItem(value: 'UPI', child: Text('Manual UPI Transfer')),
-                DropdownMenuItem(value: 'RAZORPAY', child: Text('Razorpay Payment Gateway')),
                 DropdownMenuItem(value: 'inr_wallet', child: Text('INR Wallet Balance')),
                 DropdownMenuItem(value: 'japsan_wallet', child: Text('Japsan Wallet Balance')),
                 DropdownMenuItem(value: 'silver_wallet', child: Text('Silver Wallet (Sell Silver to Buy Gold)')),

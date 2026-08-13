@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/gold_provider.dart';
 import '../../providers/auth_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -42,6 +43,23 @@ class _WalletScreenState extends State<WalletScreen> {
   void _handleDeposit() async {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (amount <= 0) return;
+
+    if (_walletType == 'japsan') {
+      final Uri url = Uri.parse('https://japsanpay.com/');
+      try {
+        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch Japsan Pay')));
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch Japsan Pay')));
+        }
+      }
+      _amountController.clear();
+      return;
+    }
 
     final provider = Provider.of<GoldProvider>(context, listen: false);
     final res = await provider.depositFunds(amount, _walletType);
