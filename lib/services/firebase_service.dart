@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
 
 import '../core/api_client.dart';
 
@@ -69,13 +70,32 @@ class FirebaseService {
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
       // Foreground messages
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
         debugPrint('Got a message whilst in the foreground!');
         
         RemoteNotification? notification = message.notification;
         AndroidNotification? android = message.notification?.android;
+        String? imageUrl = notification?.android?.imageUrl ?? notification?.apple?.imageUrl;
 
         if (notification != null && android != null) {
+          BigPictureStyleInformation? bigPictureStyleInformation;
+          
+          if (imageUrl != null) {
+            try {
+              final http.Response response = await http.get(Uri.parse(imageUrl));
+              if (response.statusCode == 200) {
+                bigPictureStyleInformation = BigPictureStyleInformation(
+                  ByteArrayAndroidBitmap(response.bodyBytes),
+                  largeIcon: ByteArrayAndroidBitmap(response.bodyBytes),
+                  contentTitle: notification.title,
+                  summaryText: notification.body,
+                );
+              }
+            } catch (e) {
+              debugPrint('Error downloading notification image: $e');
+            }
+          }
+
           flutterLocalNotificationsPlugin.show(
             id: notification.hashCode,
             title: notification.title,
@@ -88,6 +108,7 @@ class FirebaseService {
                 icon: '@mipmap/ic_launcher',
                 importance: Importance.high,
                 priority: Priority.high,
+                styleInformation: bigPictureStyleInformation,
               ),
               iOS: const DarwinNotificationDetails(),
             ),
