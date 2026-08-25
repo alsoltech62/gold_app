@@ -62,17 +62,51 @@ class _WalletScreenState extends State<WalletScreen> {
     }
 
     final provider = Provider.of<GoldProvider>(context, listen: false);
-    final res = await provider.depositFunds(amount, _walletType);
-    if (mounted) {
-      if (res['success'] == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
-        _amountController.clear();
+
+    if (_walletType == 'inr') {
+      final orderRes = await provider.createPaymentOrder(amount);
+      if (orderRes['success'] == true) {
+        final paymentUrl = orderRes['data']['payment_url'];
+        final orderId = orderRes['data']['order_id'];
+        
+        try {
+          final Uri url = Uri.parse(paymentUrl);
+          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL'), backgroundColor: Colors.red));
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+          }
+        }
+
+        // Verify deposit
+        final res = await provider.depositFunds(amount, _walletType, orderId: orderId);
+        if (mounted) {
+          if (res['success'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
+            _amountController.clear();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Deposit failed')));
+          }
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Deposit failed')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(orderRes['message'] ?? 'Could not create order'), backgroundColor: Colors.red));
+        }
+      }
+    } else {
+      // Japsan fallback or other
+      final res = await provider.depositFunds(amount, _walletType);
+      if (mounted) {
+        if (res['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
+          _amountController.clear();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Deposit failed')));
+        }
       }
     }
   }

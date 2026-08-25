@@ -5,14 +5,7 @@ import 'package:flutter/services.dart';
 import '../../providers/gold_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../gold/lock_in_screen.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cfpayment/cfdropcheckoutpayment.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cfpaymentcomponents/cfpaymentcomponent.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cfpaymentgateway/cfpaymentgatewayservice.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cfsession/cfsession.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cftheme/cftheme.dart';
-import 'package:flutter_cashfree_pg_sdk/utils/cfenums.dart';
-import 'package:flutter_cashfree_pg_sdk/utils/cfexceptions.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cferrorresponse/cferrorresponse.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SilverScreen extends StatefulWidget {
   final bool initialIsBuy;
@@ -24,38 +17,18 @@ class SilverScreen extends StatefulWidget {
 
 class _SilverScreenState extends State<SilverScreen> {
   final TextEditingController _amountController = TextEditingController();
-  String _paymentMethod = 'CASHFREE';
+  String _paymentMethod = 'RRFINCO';
   bool _isProcessingPayment = false;
   
-  var cfPaymentGatewayService = CFPaymentGatewayService();
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<GoldProvider>(context, listen: false).fetchSilverRate();
     });
-    cfPaymentGatewayService.setCallback(verifyPayment, onError);
   }
 
-  void verifyPayment(String orderId) async {
-    final goldProvider = Provider.of<GoldProvider>(context, listen: false);
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    
-    final result = await goldProvider.buySilver(amount, 'CASHFREE', cashfreeOrderId: orderId);
-    if (!mounted) return;
-    
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silver purchased successfully!')));
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LockInScreen(metalType: 'silver')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Transaction failed.'), backgroundColor: Colors.red));
-    }
-  }
-
-  void onError(CFErrorResponse errorResponse, String orderId) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorResponse.getMessage() ?? 'Payment failed'), backgroundColor: Colors.red));
-  }
+  // Cashfree callbacks removed
 
   @override
   void dispose() {
@@ -72,21 +45,24 @@ class _SilverScreenState extends State<SilverScreen> {
       return;
     }
 
-    if (_paymentMethod == 'CASHFREE') {
+    if (_paymentMethod == 'RRFINCO') {
       setState(() => _isProcessingPayment = true);
       final response = await goldProvider.createPaymentOrder(amount);
       if (response['success'] == true) {
-        final paymentSessionId = response['data']['payment_session_id'];
+        final paymentUrl = response['data']['payment_url'];
         final orderId = response['data']['order_id'];
         
         try {
-          var session = CFSessionBuilder().setEnvironment(CFEnvironment.PRODUCTION).setOrderId(orderId).setPaymentSessionId(paymentSessionId).build();
-          var theme = CFThemeBuilder().setNavigationBarBackgroundColorColor("#B08D57").setNavigationBarTextColor("#FFFFFF").setButtonBackgroundColor("#B08D57").setButtonTextColor("#FFFFFF").setPrimaryTextColor("#000000").setSecondaryTextColor("#000000").build();
-          var cfDropCheckoutPayment = CFDropCheckoutPaymentBuilder().setSession(session).setTheme(theme).build();
-          
-          cfPaymentGatewayService.doPayment(cfDropCheckoutPayment);
-        } on CFException catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+          final Uri url = Uri.parse(paymentUrl);
+          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL'), backgroundColor: Colors.red));
+          } else {
+            if (mounted) {
+              _showPaymentVerificationDialog(amount, orderId);
+            }
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? 'Could not create order'), backgroundColor: Colors.red));
@@ -95,7 +71,7 @@ class _SilverScreenState extends State<SilverScreen> {
       return;
     }
 
-    if (_paymentMethod != 'UPI' && _paymentMethod != 'CASHFREE') {
+    if (_paymentMethod != 'UPI' && _paymentMethod != 'RRFINCO') {
       Map<String, dynamic> result = await goldProvider.buySilver(amount, _paymentMethod, paymentId: 'WALLET_TXN');
       if (!mounted) return;
       if (result['success'] == true) {
@@ -198,6 +174,48 @@ class _SilverScreenState extends State<SilverScreen> {
     );
   }
 
+  void _showPaymentVerificationDialog(double amount, String orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+        ),
+        title: const Text('Payment Verification', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        content: const Text('Did you complete the payment in the browser? Click below to verify and add silver to your vault.', style: TextStyle(color: Colors.white70, fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, foregroundColor: Colors.black),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              setState(() => _isProcessingPayment = true);
+              
+              final result = await Provider.of<GoldProvider>(context, listen: false).buySilver(amount, 'RRFINCO', paymentId: orderId);
+              if (!mounted) return;
+              setState(() => _isProcessingPayment = false);
+              
+              if (result['success'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silver purchased successfully!')));
+                if (!mounted) return;
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LockInScreen(metalType: 'silver')));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Payment verification failed.'), backgroundColor: Colors.red));
+              }
+            },
+            child: const Text('Yes, Check Status', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
@@ -261,7 +279,7 @@ class _SilverScreenState extends State<SilverScreen> {
                   value: _paymentMethod,
                   decoration: const InputDecoration(labelText: 'Payment Method'),
                   items: const [
-                    DropdownMenuItem(value: 'CASHFREE', child: Text('Direct / UPI / Cards (Cashfree)')),
+                    DropdownMenuItem(value: 'RRFINCO', child: Text('Direct / UPI / Cards')),
                     DropdownMenuItem(value: 'UPI', child: Text('Manual UPI Transfer')),
                     DropdownMenuItem(value: 'inr_wallet', child: Text('INR Wallet Balance')),
                     DropdownMenuItem(value: 'japsan_wallet', child: Text('Japsan Wallet Balance')),

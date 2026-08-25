@@ -12,6 +12,7 @@ class SellGoldScreen extends StatefulWidget {
 
 class _SellGoldScreenState extends State<SellGoldScreen> {
   final _gramsController = TextEditingController();
+  final _upiIdController = TextEditingController();
   double _amount = 0.0;
 
   void _calculateAmount(String value) {
@@ -20,7 +21,8 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
       return;
     }
     final grams = double.tryParse(value) ?? 0.0;
-    final rateRaw = Provider.of<GoldProvider>(context, listen: false).currentRate?['rate_per_gram'];
+    final currentRateObj = Provider.of<GoldProvider>(context, listen: false).currentRate;
+    final rateRaw = currentRateObj?['sell_rate_per_gram'] ?? currentRateObj?['rate_per_gram'];
     final rate = rateRaw != null ? double.tryParse(rateRaw.toString()) ?? 0.0 : 0.0;
     if (rate > 0) {
       setState(() => _amount = grams * rate);
@@ -31,14 +33,22 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
     final grams = double.tryParse(_gramsController.text) ?? 0.0;
     if (grams <= 0) return;
 
+    final upiId = _upiIdController.text.trim();
+    if (upiId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your UPI ID for instant payout.')),
+      );
+      return;
+    }
+
     final goldProvider = Provider.of<GoldProvider>(context, listen: false);
-    final result = await goldProvider.sellGold(grams);
+    final result = await goldProvider.sellGold(grams, upiId: upiId);
     
     if (!mounted) return;
     
     if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sell request submitted successfully!')),
+        const SnackBar(content: Text('Sell request submitted! Funds will be instantly credited to your UPI.')),
       );
       Navigator.of(context).pop();
     } else {
@@ -84,6 +94,15 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
               ),
             ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
             const SizedBox(height: 20),
+            TextField(
+              controller: _upiIdController,
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Payout UPI ID',
+                hintText: 'yourname@upi',
+              ),
+            ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2, end: 0),
+            const SizedBox(height: 20),
             if (_amount > 0)
               Container(
                 padding: const EdgeInsets.all(15),
@@ -111,7 +130,7 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    'The amount will be credited to your linked bank account within 24-48 hours.',
+                    'The amount will be instantly credited to your provided UPI ID.',
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ),

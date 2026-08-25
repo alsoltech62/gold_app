@@ -231,13 +231,16 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> sellGold(double grams) async {
+  Future<Map<String, dynamic>> sellGold(double grams, {String? upiId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/gold/sell.php', {
+      final body = <String, dynamic>{
         'gold_grams': grams,
-      });
+      };
+      if (upiId != null) body['upi_id'] = upiId;
+
+      final response = await _apiClient.post('/api/gold/sell.php', body);
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
@@ -276,13 +279,16 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> sellSilver(double grams) async {
+  Future<Map<String, dynamic>> sellSilver(double grams, {String? upiId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/silver/sell.php', {
+      final body = <String, dynamic>{
         'grams': grams,
-      });
+      };
+      if (upiId != null) body['upi_id'] = upiId;
+
+      final response = await _apiClient.post('/api/silver/sell.php', body);
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
@@ -296,14 +302,16 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> depositFunds(double amount, String walletType) async {
+  Future<Map<String, dynamic>> depositFunds(double amount, String walletType, {String? orderId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/user/deposit.php', {
+      final body = <String, dynamic>{
         'amount': amount,
         'wallet_type': walletType,
-      });
+      };
+      if (orderId != null) body['order_id'] = orderId;
+      final response = await _apiClient.post('/api/user/deposit.php', body);
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
