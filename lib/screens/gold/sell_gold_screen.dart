@@ -111,16 +111,56 @@ class _SellGoldScreenState extends State<SellGoldScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.currency_rupee, color: Color(0xFFB08D57), size: 18),
-                    const SizedBox(width: 10),
-                    Text(
-                      'You will receive: ₹${_amount.toStringAsFixed(2)}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                  ],
+                child: Builder(
+                  builder: (context) {
+                    final currentRateObj = Provider.of<GoldProvider>(context, listen: false).currentRate;
+                    final buyRate = double.tryParse(currentRateObj?['rate_per_gram']?.toString() ?? '0') ?? 0.0;
+                    final sellRate = double.tryParse(currentRateObj?['sell_rate_per_gram']?.toString() ?? '0') ?? 0.0;
+                    
+                    double deductionPercent = 0.0;
+                    if (buyRate > 0 && sellRate > 0 && buyRate > sellRate) {
+                      deductionPercent = ((buyRate - sellRate) / buyRate) * 100;
+                    }
+                    final grams = double.tryParse(_gramsController.text) ?? 0.0;
+                    final grossAmount = grams * buyRate;
+                    final deductionAmount = grossAmount - _amount;
+
+                    return Column(
+                      children: [
+                        if (deductionPercent > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Gross Amount', style: TextStyle(color: Colors.grey)),
+                              Text('₹${grossAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Deduction (${deductionPercent.toStringAsFixed(1)}%)', style: const TextStyle(color: Colors.redAccent)),
+                              Text('-₹${deductionAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.redAccent)),
+                            ],
+                          ),
+                          const Divider(color: Colors.white24, height: 20),
+                        ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'You will receive',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Text(
+                              '₹${_amount.toStringAsFixed(2)}',
+                              style: const TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold, fontSize: 20),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
                 ),
               ).animate().fadeIn().scale(),
             const SizedBox(height: 40),

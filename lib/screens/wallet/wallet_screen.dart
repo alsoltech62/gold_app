@@ -75,21 +75,14 @@ class _WalletScreenState extends State<WalletScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL'), backgroundColor: Colors.red));
             }
+          } else {
+            if (mounted) {
+              _showDepositVerificationDialog(amount, orderId);
+            }
           }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
-          }
-        }
-
-        // Verify deposit
-        final res = await provider.depositFunds(amount, _walletType, orderId: orderId);
-        if (mounted) {
-          if (res['success'] == true) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deposit successful!')));
-            _amountController.clear();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Deposit failed')));
           }
         }
       } else {
@@ -109,6 +102,78 @@ class _WalletScreenState extends State<WalletScreen> {
         }
       }
     }
+  }
+
+  void _showDepositVerificationDialog(double amount, String orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: const Color(0xFFB08D57).withOpacity(0.3)),
+        ),
+        title: const Text(
+          'Payment Verification',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Did you complete the payment in the browser? Click below to verify and add funds to your wallet.',
+          style: TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB08D57),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              
+              final res = await Provider.of<GoldProvider>(
+                context,
+                listen: false,
+              ).depositFunds(amount, _walletType, orderId: orderId);
+              
+              if (!mounted) return;
+              
+              if (res['success'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Deposit successful!')),
+                );
+                _amountController.clear();
+                
+                // Refresh dashboard to update balance
+                Provider.of<GoldProvider>(context, listen: false).fetchDashboard();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(res['message'] ?? 'Payment verification failed.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Yes, Check Status',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleSipSave() async {
