@@ -56,17 +56,28 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 gramsText = '+${txn['gold_grams'] ?? '0'} gms';
                 gramsColor = Colors.green;
               } else if (type == 'sell') {
-                title = 'Sold $metalType';
-                icon = Icons.remove;
-                iconColor = Colors.red;
-                gramsText = '-${txn['gold_grams'] ?? '0'} gms';
-                gramsColor = Colors.red;
+                if (txn['notes'] != null && txn['notes'].toString().startsWith('Locked')) {
+                  title = 'Vault Lock-in';
+                  icon = Icons.lock;
+                  iconColor = Colors.purple;
+                  gramsText = 'Locked';
+                  gramsColor = Colors.purple;
+                } else {
+                  title = 'Sold $metalType';
+                  icon = Icons.remove;
+                  iconColor = Colors.red;
+                  gramsText = '-${txn['gold_grams'] ?? '0'} gms';
+                  gramsColor = Colors.red;
+                }
+
               } else if (type == 'deposit') {
-                title = 'Wallet Deposit';
+                title = txn['notes']?.toString() ?? 'Wallet Deposit';
                 icon = Icons.account_balance_wallet;
                 iconColor = Colors.blue;
-                gramsText = '---';
-                gramsColor = Colors.grey;
+                final amount = double.tryParse(txn['amount_inr']?.toString() ?? '0') ?? 0;
+                gramsText = amount > 0 ? '+₹${amount.toStringAsFixed(0)}' : '---';
+                gramsColor = amount > 0 ? Colors.green : Colors.grey;
+
               } else if (type == 'delivery') {
                 title = 'Physical Claim';
                 icon = Icons.local_shipping;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GoldBarPe</string>
+    <string name="facebook_app_id">1574377770367487</string>
+    <string name="fb_login_protocol_scheme">fb1574377770367487</string>
+    <string name="facebook_client_token">de753f52f4c41a37b8f7f411f0c81637</string>
+</resources>

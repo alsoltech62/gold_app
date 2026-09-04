@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/gold_provider.dart';
-import '../gold/lock_in_modal.dart';
+import '../gold/lock_in_screen.dart';
 
 class DeliveryScreen extends StatefulWidget {
   final String? initialMetalType;
@@ -47,7 +48,117 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
       return;
     }
 
-    _submitRequest(grams, street, city, state, pincode);
+    _showConfirmationDialog(grams, street, city, state, pincode);
+  }
+
+  void _showConfirmationDialog(double grams, String street, String city, String state, String pincode) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: const Color(0xFFB08D57).withOpacity(0.3)),
+        ),
+        title: const Text('Confirm Delivery', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text('Do you want to lock your metal in the vault or proceed with physical delivery?', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LockInScreen(metalType: _selectedMetal),
+                ),
+              );
+            },
+            child: const Text('Lock In', style: TextStyle(color: Color(0xFFB08D57), fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB08D57),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _processPaymentAndRequest(grams, street, city, state, pincode);
+            },
+            child: const Text('Continue Anyway', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _processPaymentAndRequest(double grams, String street, String city, String state, String pincode) async {
+    final provider = Provider.of<GoldProvider>(context, listen: false);
+    
+    // Calculate total charge
+    final s = provider.settings ?? {};
+    final double deliveryCharge = (s['delivery_charge'] ?? 150).toDouble();
+    final double packageCharge = (s['package_charge'] ?? 50).toDouble();
+    final double forwardingCharge = (s['forwarding_charge'] ?? 100).toDouble();
+    final double totalCharge = deliveryCharge + packageCharge + forwardingCharge;
+
+    if (totalCharge < 100) {
+      _submitRequest(grams, street, city, state, pincode);
+      return;
+    }
+
+    // Call payment gateway
+    final response = await provider.createPaymentOrder(totalCharge);
+    if (response['success'] == true) {
+      final paymentUrl = response['data']['payment_url'];
+      final orderId = response['data']['order_id'];
+
+      try {
+        final Uri url = Uri.parse(paymentUrl);
+        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch payment URL'), backgroundColor: Colors.red));
+        } else {
+          if (!mounted) return;
+          _showPaymentVerificationDialog(orderId, grams, street, city, state, pincode);
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? 'Could not create order'), backgroundColor: Colors.red));
+    }
+  }
+
+  void _showPaymentVerificationDialog(String orderId, double grams, String street, String city, String state, String pincode) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: const Color(0xFFB08D57).withOpacity(0.3)),
+        ),
+        title: const Text('Payment Verification', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text('Did you complete the payment in the browser? Click below to verify and complete your delivery request.', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB08D57),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _submitRequest(grams, street, city, state, pincode);
+            },
+            child: const Text('Yes, Check Status', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _submitRequest(double grams, String street, String city, String state, String pincode) async {
