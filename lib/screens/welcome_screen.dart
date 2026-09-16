@@ -96,7 +96,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                   const Text(
-                    "FROM ₹1000",
+                    "FROM ₹10",
                     style: TextStyle(
                       fontSize: 48,
                       color: Colors.white,

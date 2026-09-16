@@ -17,7 +17,7 @@ class BuyGoldScreen extends StatefulWidget {
 class _BuyGoldScreenState extends State<BuyGoldScreen> {
   final _amountController = TextEditingController();
   double _grams = 0.0;
-  String _paymentMethod = 'RRFINCO';
+  String _paymentMethod = 'CASHFREE';
   bool _isProcessingPayment = false;
 
   @override
@@ -53,16 +53,16 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
 
   void _handleBuy() async {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
-    if (amount < 100) {
+    if (amount < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Minimum investment is ₹100')),
+        const SnackBar(content: Text('Minimum investment is ₹10')),
       );
       return;
     }
 
     final goldProvider = Provider.of<GoldProvider>(context, listen: false);
 
-    if (_paymentMethod == 'RRFINCO') {
+    if (_paymentMethod == 'CASHFREE') {
       setState(() => _isProcessingPayment = true);
       final response = await goldProvider.createPaymentOrder(amount);
       if (response['success'] == true) {
@@ -100,7 +100,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
       return;
     }
 
-    if (_paymentMethod != 'UPI' && _paymentMethod != 'RRFINCO') {
+    if (_paymentMethod != 'UPI' && _paymentMethod != 'CASHFREE') {
       final result = await goldProvider.buyGold(
         amount,
         _paymentMethod,
@@ -315,7 +315,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               final result = await Provider.of<GoldProvider>(
                 context,
                 listen: false,
-              ).buyGold(amount, 'RRFINCO', orderId);
+              ).buyGold(amount, 'CASHFREE', orderId);
               if (!mounted) return;
               setState(() => _isProcessingPayment = false);
 
@@ -427,7 +427,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
             const SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [500, 1000, 2000, 5000].map((amt) {
+              children: [10, 100, 500, 1000].map((amt) {
                 return InkWell(
                   onTap: () {
                     _amountController.text = amt.toString();
@@ -457,8 +457,8 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
               decoration: const InputDecoration(labelText: 'Payment Method'),
               items: const [
                 DropdownMenuItem(
-                  value: 'RRFINCO',
-                  child: Text('Direct / UPI / Cards'),
+                  value: 'CASHFREE',
+                  child: Text('Cashfree (UPI, Cards, NetBanking)'),
                 ),
                 DropdownMenuItem(
                   value: 'UPI',

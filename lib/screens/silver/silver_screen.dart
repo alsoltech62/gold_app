@@ -17,7 +17,7 @@ class SilverScreen extends StatefulWidget {
 
 class _SilverScreenState extends State<SilverScreen> {
   final TextEditingController _amountController = TextEditingController();
-  String _paymentMethod = 'RRFINCO';
+  String _paymentMethod = 'CASHFREE';
   bool _isProcessingPayment = false;
 
   @override
@@ -40,14 +40,14 @@ class _SilverScreenState extends State<SilverScreen> {
     final goldProvider = Provider.of<GoldProvider>(context, listen: false);
 
     final amount = double.tryParse(_amountController.text) ?? 0;
-    if (amount < 100) {
+    if (amount < 10) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Minimum amount is ₹100')));
+      ).showSnackBar(const SnackBar(content: Text('Minimum amount is ₹10')));
       return;
     }
 
-    if (_paymentMethod == 'RRFINCO') {
+    if (_paymentMethod == 'CASHFREE') {
       setState(() => _isProcessingPayment = true);
       final response = await goldProvider.createPaymentOrder(amount);
       if (response['success'] == true) {
@@ -85,7 +85,7 @@ class _SilverScreenState extends State<SilverScreen> {
       return;
     }
 
-    if (_paymentMethod != 'UPI' && _paymentMethod != 'RRFINCO') {
+    if (_paymentMethod != 'UPI' && _paymentMethod != 'CASHFREE') {
       Map<String, dynamic> result = await goldProvider.buySilver(
         amount,
         _paymentMethod,
@@ -303,7 +303,7 @@ class _SilverScreenState extends State<SilverScreen> {
               final result = await Provider.of<GoldProvider>(
                 context,
                 listen: false,
-              ).buySilver(amount, 'RRFINCO', paymentId: orderId);
+              ).buySilver(amount, 'CASHFREE', paymentId: orderId);
               if (!mounted) return;
               setState(() => _isProcessingPayment = false);
 
@@ -426,8 +426,8 @@ class _SilverScreenState extends State<SilverScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(
-                      value: 'RRFINCO',
-                      child: Text('Direct / UPI / Cards'),
+                      value: 'CASHFREE',
+                      child: Text('Cashfree (UPI, Cards, NetBanking)'),
                     ),
                     DropdownMenuItem(
                       value: 'UPI',
