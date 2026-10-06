@@ -96,23 +96,6 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> cancelSip(int sipId) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      final response = await _apiClient.post('/api/user/cancel_sip.php', {
-        'sip_id': sipId,
-      });
-      return response;
-    } catch (e) {
-      debugPrint('Error cancelling sip: $e');
-      return {'success': false, 'message': 'Failed to cancel SIP'};
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> fetchTransactions() async {
     _isLoading = true;
     notifyListeners();
@@ -345,19 +328,45 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> updateSipSettings(bool active, double amount, String frequency, [String metalType = 'gold']) async {
+  Future<Map<String, dynamic>> updateSipSettings(bool active, double amount, String frequency, [String metalType = 'gold', Map<String, dynamic>? extra]) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/user/sip.php', {
+      final body = <String, dynamic>{
         'active': active ? 1 : 0,
         'amount': amount,
         'frequency': frequency,
         'metal_type': metalType,
+      };
+      if (extra != null) {
+        body.addAll(extra);
+      }
+      final response = await _apiClient.post('/api/sip/setup.php', body);
+      _isLoading = false;
+      if (response['success'] == true) {
+        await fetchDashboard();
+        await fetchSipHistory(metalType: metalType);
+      }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error'};
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelSip(int sipId, [String? metalType]) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/user/cancel_sip.php', {
+        'sip_id': sipId,
       });
       _isLoading = false;
       if (response['success'] == true) {
         await fetchDashboard();
+        await fetchSipHistory(metalType: metalType);
       }
       notifyListeners();
       return response;
@@ -390,12 +399,13 @@ class GoldProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> createPaymentOrder(double amountInr) async {
+  Future<Map<String, dynamic>> createPaymentOrder(double amountInr, {String metalType = 'gold'}) async {
     _isLoading = true;
     notifyListeners();
     try {
       final response = await _apiClient.post('/api/payment/create_order.php', {
         'amount_inr': amountInr,
+        'metal_type': metalType,
       });
       _isLoading = false;
       notifyListeners();

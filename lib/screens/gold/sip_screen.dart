@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../providers/gold_provider.dart';
 
@@ -91,8 +92,22 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
 
       if (result['success'] == true) {
         if (!mounted) return;
+        
+        final authLink = result['data']?['auth_link'];
+        if (authLink != null && authLink.toString().isNotEmpty) {
+          try {
+            final uri = Uri.parse(authLink.toString());
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } catch (e) {
+            debugPrint('Error launching mandate auth link: $e');
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SIP Setup successfully'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(result['message'] ?? 'SIP and Auto-Debit Mandate Setup successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
         await provider.fetchSipHistory(metalType: widget.metalType);
         await provider.fetchDashboard();
@@ -377,12 +392,33 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  sip['status']?.toString().toUpperCase() ?? 'ACTIVE',
+                  sip['mandate_status'] == 'ACTIVE' ? 'AUTO-DEBIT ACTIVE' : (sip['status']?.toString().toUpperCase() ?? 'ACTIVE'),
                   style: const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
+              if (sip['auth_link'] != null && sip['mandate_status'] == 'pending') ...[
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    try {
+                      final uri = Uri.parse(sip['auth_link'].toString());
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } catch (e) {
+                      debugPrint('Error launching mandate auth: $e');
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('AUTHORIZE', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
               if (sip['id'] != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 InkWell(
                   onTap: () async {
                     final confirm = await showDialog<bool>(
@@ -390,7 +426,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                       builder: (c) => AlertDialog(
                         backgroundColor: const Color(0xFF1E1E1E),
                         title: const Text('Cancel SIP', style: TextStyle(color: Colors.white)),
-                        content: const Text('Are you sure you want to cancel this SIP?', style: TextStyle(color: Colors.white70)),
+                        content: const Text('Are you sure you want to cancel this SIP and its Auto-Debit mandate?', style: TextStyle(color: Colors.white70)),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('NO', style: TextStyle(color: Colors.grey))),
                           TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('YES', style: TextStyle(color: Colors.red))),
@@ -399,7 +435,7 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
                     );
                     if (confirm == true) {
                       final provider = Provider.of<GoldProvider>(context, listen: false);
-                      final res = await provider.cancelSip(int.parse(sip['id'].toString()));
+                      final res = await provider.cancelSip(int.parse(sip['id'].toString()), widget.metalType);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: Text(res['message'] ?? (res['success'] == true ? 'Cancelled successfully' : 'Failed to cancel')),

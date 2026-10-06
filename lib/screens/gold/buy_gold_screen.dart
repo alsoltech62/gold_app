@@ -64,7 +64,7 @@ class _BuyGoldScreenState extends State<BuyGoldScreen> {
 
     if (_paymentMethod == 'CASHFREE') {
       setState(() => _isProcessingPayment = true);
-      final response = await goldProvider.createPaymentOrder(amount);
+      final response = await goldProvider.createPaymentOrder(amount, metalType: 'gold');
       if (response['success'] == true) {
         final paymentUrl = response['data']['payment_url'];
         final orderId = response['data']['order_id'];

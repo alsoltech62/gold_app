@@ -19,22 +19,35 @@ class AuthProvider with ChangeNotifier {
   Future<void> initAuth() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
-    if (_token != null) {
-      _isAuthenticated = true;
-      notifyListeners();
-      await fetchUser();
+    if (_token != null && _token!.trim().isNotEmpty) {
+      final userSuccess = await fetchUser();
+      if (userSuccess) {
+        _isAuthenticated = true;
+      } else {
+        await logout();
+      }
+    } else {
+      _isAuthenticated = false;
+      _token = null;
+      _user = null;
     }
+    notifyListeners();
   }
 
-  Future<void> fetchUser() async {
+  Future<bool> fetchUser() async {
     try {
       final response = await _apiClient.get('/api/user/profile.php');
-      if (response['success'] == true) {
+      if (response['success'] == true && response['data'] != null) {
         _user = response['data'];
+        _isAuthenticated = true;
         notifyListeners();
+        return true;
+      } else {
+        return false;
       }
     } catch (e) {
-      print('DEBUG: Error fetching user: $e');
+      debugPrint('DEBUG: Error fetching user: $e');
+      return false;
     }
   }
 
