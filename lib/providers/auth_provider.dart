@@ -68,18 +68,45 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> signup(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> sendSignupOtp(String mobile, {String? referralCode}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.post('/api/auth/signup.php', data);
+      final response = await _apiClient.post('/api/auth/send_otp.php', {
+        'mobile': mobile,
+        'type': 'signup',
+        if (referralCode != null && referralCode.trim().isNotEmpty) 'referral_code': referralCode.trim(),
+      });
       _isLoading = false;
       notifyListeners();
       return response;
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return {'success': false, 'message': 'Connection error'};
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> signup(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/auth/signup.php', data);
+      if (response['success'] == true && response['token'] != null) {
+        _token = response['token'];
+        _user = response['user'];
+        _isAuthenticated = true;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', _token!);
+      }
+      _isLoading = false;
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Connection error: $e'};
     }
   }
 

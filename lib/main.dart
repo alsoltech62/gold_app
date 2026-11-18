@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/gold_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/splash_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -33,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => GoldProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const GoldApp(),
     ),

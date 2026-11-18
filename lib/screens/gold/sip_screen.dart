@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -25,10 +26,11 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _fetchPlans();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<GoldProvider>(context, listen: false).fetchSipHistory(metalType: widget.metalType);
-    });
+    // [SIP TEMPORARILY COMMENTED OUT FOR COMING SOON]
+    // _fetchPlans();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Provider.of<GoldProvider>(context, listen: false).fetchSipHistory(metalType: widget.metalType);
+    // });
   }
 
   @override
@@ -139,6 +141,36 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final isSilver = widget.metalType == 'silver';
+    final accentColor = isSilver ? const Color(0xFFC0C0C0) : const Color(0xFFB08D57);
+
+    // =========================================================================
+    // SIP COMING SOON UI (ACTIVE)
+    // =========================================================================
+    return Scaffold(
+      backgroundColor: const Color(0xFF070707),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF070707),
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          widget.metalType == 'all' 
+              ? 'SIP Plans' 
+              : '${isSilver ? 'Silver' : 'Gold'} SIP',
+          style: TextStyle(color: accentColor, fontWeight: FontWeight.bold),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _buildComingSoonBody(accentColor, isSilver),
+    );
+
+    /*
+    // =========================================================================
+    // ORIGINAL SIP SCREEN BODY & TABS (COMMENTED OUT TEMPORARILY - NOT REMOVED)
+    // =========================================================================
     return Scaffold(
       backgroundColor: const Color(0xFF070707),
       appBar: AppBar(
@@ -174,6 +206,217 @@ class _SipScreenState extends State<SipScreen> with SingleTickerProviderStateMix
               _buildSetupTab(),
             ],
           ),
+    );
+    */
+  }
+
+  // ── Coming Soon UI ───────────────────────────────────────────────────────
+  Widget _buildComingSoonBody(Color accentColor, bool isSilver) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Status Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: accentColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.hourglass_top_rounded, color: accentColor, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'COMING SOON',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Icon with glowing effect
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    accentColor.withOpacity(0.2),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161616),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: accentColor.withOpacity(0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.15),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: accentColor,
+                    size: 38,
+                  ),
+                ),
+              ),
+            ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+
+            // Main heading
+            Text(
+              '${isSilver ? 'Silver' : 'Gold'} SIP is Coming Soon',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Subtitle
+            Text(
+              'We are currently upgrading our Systematic Investment Plan engine to deliver seamless recurring micro-investments, bank mandates, and zero-fee gold accumulation.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Highlights
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121212),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Column(
+                children: [
+                  _buildFeatureTile(
+                    icon: Icons.calendar_today_rounded,
+                    title: 'Flexible Frequency',
+                    subtitle: 'Daily, weekly, or monthly automated savings according to your schedule.',
+                    color: accentColor,
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  _buildFeatureTile(
+                    icon: Icons.verified_user_rounded,
+                    title: '100% 24K Pure & Insured',
+                    subtitle: 'Every accumulated gram is backed by physical certified bullion in vaults.',
+                    color: Colors.greenAccent,
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  _buildFeatureTile(
+                    icon: Icons.bolt_rounded,
+                    title: 'Auto-Debit Mandates',
+                    subtitle: 'Automated deductions with seamless bank and UPI e-mandates.',
+                    color: Colors.amberAccent,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Return / Action Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentColor,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'Back to Dashboard',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

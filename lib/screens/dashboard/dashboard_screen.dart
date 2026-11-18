@@ -9,7 +9,7 @@ import '../silver/silver_screen.dart';
 import '../silver/buy_silver_flow_screen.dart';
 import '../transactions/transaction_list_screen.dart';
 import '../notifications_screen.dart';
-import '../gold/sip_screen.dart';
+// import '../gold/sip_screen.dart';
 import '../gold/lock_in_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -142,9 +142,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final totalValue = data['current_value_inr'] ?? 0;
           final lockedGold = data['locked_gold'] ?? 0;
           final lockedSilver = data['locked_silver'] ?? 0;
-          final sipActive =
-              (data['sip_active'] == true || data['sip_active'] == 1);
-          final sipAmount = data['sip_amount'] ?? 0;
+          // final sipActive =
+          //     (data['sip_active'] == true || data['sip_active'] == 1);
+          // final sipAmount = data['sip_amount'] ?? 0;
 
           final pl =
               double.tryParse(data['profit_loss_inr']?.toString() ?? '0') ?? 0;
@@ -694,104 +694,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (sipActive) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF121212),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.green.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.autorenew,
-                              color: Colors.green,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      "ACTIVE SIP",
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                    InkWell(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const SipScreen(metalType: 'all'),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: const [
-                                          Text(
-                                            "VIEW ALL ",
-                                            style: TextStyle(
-                                              color: Colors.green,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Icon(
-                                            Icons.chevron_right,
-                                            color: Colors.green,
-                                            size: 14,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Total: ₹ ${formatINR(sipAmount)}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (data['sip_breakdown'] is Map)
-                                  ...((data['sip_breakdown'] as Map).entries.map(
-                                    (e) => Text(
-                                      "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
-                                      style: const TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  // if (sipActive) ...[
+                  //   Container(
+                  //     padding: const EdgeInsets.all(16),
+                  //     decoration: BoxDecoration(
+                  //       color: const Color(0xFF121212),
+                  //       borderRadius: BorderRadius.circular(16),
+                  //       border: Border.all(
+                  //         color: Colors.green.withOpacity(0.3),
+                  //       ),
+                  //     ),
+                  //     child: Row(
+                  //       children: [
+                  //         Container(
+                  //           padding: const EdgeInsets.all(8),
+                  //           decoration: BoxDecoration(
+                  //             color: Colors.green.withOpacity(0.1),
+                  //             borderRadius: BorderRadius.circular(8),
+                  //           ),
+                  //           child: const Icon(
+                  //             Icons.autorenew,
+                  //             color: Colors.green,
+                  //             size: 24,
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 16),
+                  //         Expanded(
+                  //           child: Column(
+                  //             crossAxisAlignment: CrossAxisAlignment.start,
+                  //             children: [
+                  //               Row(
+                  //                 mainAxisAlignment:
+                  //                     MainAxisAlignment.spaceBetween,
+                  //                 children: [
+                  //                   const Text(
+                  //                     "ACTIVE SIP",
+                  //                     style: TextStyle(
+                  //                       color: Colors.green,
+                  //                       fontSize: 10,
+                  //                       fontWeight: FontWeight.bold,
+                  //                       letterSpacing: 1,
+                  //                     ),
+                  //                   ),
+                  //                   InkWell(
+                  //                     onTap: () => Navigator.push(
+                  //                       context,
+                  //                       MaterialPageRoute(
+                  //                         builder: (_) =>
+                  //                             const SipScreen(metalType: 'all'),
+                  //                       ),
+                  //                     ),
+                  //                     child: Row(
+                  //                       children: const [
+                  //                         Text(
+                  //                           "VIEW ALL ",
+                  //                           style: TextStyle(
+                  //                             color: Colors.green,
+                  //                             fontSize: 10,
+                  //                             fontWeight: FontWeight.bold,
+                  //                           ),
+                  //                         ),
+                  //                         Icon(
+                  //                           Icons.chevron_right,
+                  //                           color: Colors.green,
+                  //                           size: 14,
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ),
+                  //                 ],
+                  //               ),
+                  //               const SizedBox(height: 4),
+                  //               Text(
+                  //                 "Total: ₹ ${formatINR(sipAmount)}",
+                  //                 style: const TextStyle(
+                  //                   color: Colors.white,
+                  //                   fontSize: 16,
+                  //                   fontWeight: FontWeight.bold,
+                  //                 ),
+                  //               ),
+                  //               if (data['sip_breakdown'] is Map)
+                  //                 ...((data['sip_breakdown'] as Map).entries.map(
+                  //                   (e) => Text(
+                  //                     "₹ ${formatINR(e.value)} ${e.key.toString().toUpperCase()}",
+                  //                     style: const TextStyle(
+                  //                       color: Colors.green,
+                  //                       fontSize: 12,
+                  //                       fontWeight: FontWeight.bold,
+                  //                     ),
+                  //                   ),
+                  //                 )),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  //   const SizedBox(height: 16),
+                  // ],
                   const SizedBox(height: 24),
 
                   // Recent Transactions

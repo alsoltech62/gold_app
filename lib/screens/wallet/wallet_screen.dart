@@ -14,11 +14,11 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _sipAmountController = TextEditingController();
+  // final TextEditingController _sipAmountController = TextEditingController();
   String _walletType = 'inr';
-  String _sipFreq = 'monthly';
-  String _sipMetalType = 'gold';
-  bool _sipActive = false;
+  // String _sipFreq = 'monthly';
+  // String _sipMetalType = 'gold';
+  // bool _sipActive = false;
 
   @override
   void initState() {
@@ -29,14 +29,14 @@ class _WalletScreenState extends State<WalletScreen> {
         final data = provider.dashboardData;
         if (data != null && mounted) {
           setState(() {
-            _sipActive = data['sip_active'] ?? false;
-            _sipAmountController.text = (data['sip_amount'] ?? '').toString();
-            _sipFreq = data['sip_frequency'] ?? 'monthly';
-            _sipMetalType = data['sip_metal_type'] ?? 'gold';
+            // _sipActive = data['sip_active'] ?? false;
+            // _sipAmountController.text = (data['sip_amount'] ?? '').toString();
+            // _sipFreq = data['sip_frequency'] ?? 'monthly';
+            // _sipMetalType = data['sip_metal_type'] ?? 'gold';
           });
         }
       });
-      provider.fetchSipHistory();
+      // provider.fetchSipHistory();
     });
   }
 
@@ -176,27 +176,27 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  void _handleSipSave() async {
-    final amount = double.tryParse(_sipAmountController.text) ?? 0;
-    final provider = Provider.of<GoldProvider>(context, listen: false);
-    final res = await provider.updateSipSettings(
-      _sipActive,
-      amount,
-      _sipFreq,
-      _sipMetalType,
-    );
-    if (mounted) {
-      if (res['success'] == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('SIP Settings Saved')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Failed to save SIP')),
-        );
-      }
-    }
-  }
+  // void _handleSipSave() async {
+  //   final amount = double.tryParse(_sipAmountController.text) ?? 0;
+  //   final provider = Provider.of<GoldProvider>(context, listen: false);
+  //   final res = await provider.updateSipSettings(
+  //     _sipActive,
+  //     amount,
+  //     _sipFreq,
+  //     _sipMetalType,
+  //   );
+  //   if (mounted) {
+  //     if (res['success'] == true) {
+  //       ScaffoldMessenger.of(
+  //         context,
+  //       ).showSnackBar(const SnackBar(content: Text('SIP Settings Saved')));
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text(res['message'] ?? 'Failed to save SIP')),
+  //       );
+  //     }
+  //   }
+  // }
 
   void _handleWithdraw() {
     showDialog(
@@ -360,7 +360,8 @@ class _WalletScreenState extends State<WalletScreen> {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('WALLET & SIP'), centerTitle: true),
+      // appBar: AppBar(title: const Text('WALLET & SIP'), centerTitle: true),
+      appBar: AppBar(title: const Text('WALLET'), centerTitle: true),
       body: Consumer<GoldProvider>(
         builder: (context, provider, _) {
           final data = provider.dashboardData ?? {};
@@ -368,7 +369,7 @@ class _WalletScreenState extends State<WalletScreen> {
               double.tryParse(data['inr_wallet']?.toString() ?? '') ?? 0.0;
           final japsanBalance =
               double.tryParse(data['japsan_wallet']?.toString() ?? '') ?? 0.0;
-          final sipHistory = provider.sipHistory;
+          // final sipHistory = provider.sipHistory;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -571,187 +572,187 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                // const SizedBox(height: 40),
 
-                // SIP Settings
-                const Text(
-                  'Auto SIP Settings',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 15),
-                SwitchListTile(
-                  title: const Text('Enable SIP'),
-                  value: _sipActive,
-                  onChanged: (val) => setState(() => _sipActive = val),
-                  activeColor: Colors.blue,
-                ),
-                if (_sipActive) ...[
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: _sipAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'SIP Amount',
-                      prefixText: '₹ ',
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  DropdownButtonFormField<String>(
-                    value: _sipMetalType,
-                    decoration: const InputDecoration(
-                      labelText: 'SIP Metal Type',
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'gold', child: Text('Gold')),
-                      DropdownMenuItem(value: 'silver', child: Text('Silver')),
-                    ],
-                    onChanged: (val) => setState(() => _sipMetalType = val!),
-                  ),
-                  const SizedBox(height: 15),
-                  DropdownButtonFormField<String>(
-                    value: _sipFreq,
-                    decoration: const InputDecoration(labelText: 'Frequency'),
-                    items: const [
-                      DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                      DropdownMenuItem(
-                        value: 'monthly',
-                        child: Text('Monthly'),
-                      ),
-                    ],
-                    onChanged: (val) => setState(() => _sipFreq = val!),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: provider.isLoading ? null : _handleSipSave,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: Colors.blue.withOpacity(0.2),
-                    foregroundColor: Colors.blue,
-                  ),
-                  child: const Text('SAVE SIP SETTINGS'),
-                ),
+                // // SIP Settings
+                // const Text(
+                //   'Auto SIP Settings',
+                //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                // ),
+                // const SizedBox(height: 15),
+                // SwitchListTile(
+                //   title: const Text('Enable SIP'),
+                //   value: _sipActive,
+                //   onChanged: (val) => setState(() => _sipActive = val),
+                //   activeColor: Colors.blue,
+                // ),
+                // if (_sipActive) ...[
+                //   const SizedBox(height: 15),
+                //   TextField(
+                //     controller: _sipAmountController,
+                //     keyboardType: TextInputType.number,
+                //     decoration: const InputDecoration(
+                //       labelText: 'SIP Amount',
+                //       prefixText: '₹ ',
+                //     ),
+                //   ),
+                //   const SizedBox(height: 15),
+                //   DropdownButtonFormField<String>(
+                //     value: _sipMetalType,
+                //     decoration: const InputDecoration(
+                //       labelText: 'SIP Metal Type',
+                //     ),
+                //     items: const [
+                //       DropdownMenuItem(value: 'gold', child: Text('Gold')),
+                //       DropdownMenuItem(value: 'silver', child: Text('Silver')),
+                //     ],
+                //     onChanged: (val) => setState(() => _sipMetalType = val!),
+                //   ),
+                //   const SizedBox(height: 15),
+                //   DropdownButtonFormField<String>(
+                //     value: _sipFreq,
+                //     decoration: const InputDecoration(labelText: 'Frequency'),
+                //     items: const [
+                //       DropdownMenuItem(value: 'daily', child: Text('Daily')),
+                //       DropdownMenuItem(
+                //         value: 'monthly',
+                //         child: Text('Monthly'),
+                //       ),
+                //     ],
+                //     onChanged: (val) => setState(() => _sipFreq = val!),
+                //   ),
+                // ],
+                // const SizedBox(height: 20),
+                // ElevatedButton(
+                //   onPressed: provider.isLoading ? null : _handleSipSave,
+                //   style: ElevatedButton.styleFrom(
+                //     padding: const EdgeInsets.symmetric(vertical: 15),
+                //     backgroundColor: Colors.blue.withOpacity(0.2),
+                //     foregroundColor: Colors.blue,
+                //   ),
+                //   child: const Text('SAVE SIP SETTINGS'),
+                // ),
 
-                const SizedBox(height: 40),
+                // const SizedBox(height: 40),
 
-                // SIP History
-                if (sipHistory != null) ...[
-                  const Text(
-                    'SIP Investment Summary',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E1E1E),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'TOTAL INVESTED',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                currencyFormat.format(
-                                  double.tryParse(
-                                        sipHistory['total_invested']
-                                                ?.toString() ??
-                                            '',
-                                      ) ??
-                                      0.0,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E1E1E),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'GOLD ACQUIRED',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                '${sipHistory['total_gold'] ?? 0}g',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFB08D57),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    'Recent Deductions',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: (sipHistory['history'] as List?)?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      final txn = sipHistory['history'][index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          currencyFormat.format(
-                            double.tryParse(
-                                  txn['amount_inr']?.toString() ?? '',
-                                ) ??
-                                0.0,
-                          ),
-                        ),
-                        subtitle: Text(
-                          txn['created_at'].toString().split(' ')[0],
-                        ),
-                        trailing: Text(
-                          '+${txn['gold_grams']}g',
-                          style: const TextStyle(
-                            color: Color(0xFFB08D57),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                // // SIP History
+                // if (sipHistory != null) ...[
+                //   const Text(
+                //     'SIP Investment Summary',
+                //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //   ),
+                //   const SizedBox(height: 15),
+                //   Row(
+                //     children: [
+                //       Expanded(
+                //         child: Container(
+                //           padding: const EdgeInsets.all(15),
+                //           decoration: BoxDecoration(
+                //             color: const Color(0xFF1E1E1E),
+                //             borderRadius: BorderRadius.circular(15),
+                //           ),
+                //           child: Column(
+                //             crossAxisAlignment: CrossAxisAlignment.start,
+                //             children: [
+                //               const Text(
+                //                 'TOTAL INVESTED',
+                //                 style: TextStyle(
+                //                   color: Colors.grey,
+                //                   fontSize: 10,
+                //                 ),
+                //               ),
+                //               const SizedBox(height: 5),
+                //               Text(
+                //                 currencyFormat.format(
+                //                   double.tryParse(
+                //                         sipHistory['total_invested']
+                //                                 ?.toString() ??
+                //                             '',
+                //                       ) ??
+                //                       0.0,
+                //                 ),
+                //                 style: const TextStyle(
+                //                   fontSize: 16,
+                //                   fontWeight: FontWeight.bold,
+                //                 ),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //       ),
+                //       const SizedBox(width: 15),
+                //       Expanded(
+                //         child: Container(
+                //           padding: const EdgeInsets.all(15),
+                //           decoration: BoxDecoration(
+                //             color: const Color(0xFF1E1E1E),
+                //             borderRadius: BorderRadius.circular(15),
+                //           ),
+                //           child: Column(
+                //             crossAxisAlignment: CrossAxisAlignment.start,
+                //             children: [
+                //               const Text(
+                //                 'GOLD ACQUIRED',
+                //                 style: TextStyle(
+                //                   color: Colors.grey,
+                //                   fontSize: 10,
+                //                 ),
+                //               ),
+                //               const SizedBox(height: 5),
+                //               Text(
+                //                 '${sipHistory['total_gold'] ?? 0}g',
+                //                 style: const TextStyle(
+                //                   fontSize: 16,
+                //                   fontWeight: FontWeight.bold,
+                //                   color: Color(0xFFB08D57),
+                //                 ),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                //   const SizedBox(height: 15),
+                //   const Text(
+                //     'Recent Deductions',
+                //     style: TextStyle(
+                //       color: Colors.grey,
+                //       fontSize: 12,
+                //       fontWeight: FontWeight.bold,
+                //     ),
+                //   ),
+                //   const SizedBox(height: 10),
+                //   ListView.builder(
+                //     shrinkWrap: true,
+                //     physics: const NeverScrollableScrollPhysics(),
+                //     itemCount: (sipHistory['history'] as List?)?.length ?? 0,
+                //     itemBuilder: (context, index) {
+                //       final txn = sipHistory['history'][index];
+                //       return ListTile(
+                //         contentPadding: EdgeInsets.zero,
+                //         title: Text(
+                //           currencyFormat.format(
+                //             double.tryParse(
+                //                   txn['amount_inr']?.toString() ?? '',
+                //                 ) ??
+                //                 0.0,
+                //           ),
+                //         ),
+                //         subtitle: Text(
+                //           txn['created_at'].toString().split(' ')[0],
+                //         ),
+                //         trailing: Text(
+                //           '+${txn['gold_grams']}g',
+                //           style: const TextStyle(
+                //             color: Color(0xFFB08D57),
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       );
+                //     },
+                //   ),
+                // ],
               ],
             ),
           );

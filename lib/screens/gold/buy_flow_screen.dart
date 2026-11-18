@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'buy_gold_screen.dart';
-import 'sip_screen.dart';
+// import 'sip_screen.dart';
 
 class BuyFlowScreen extends StatelessWidget {
   const BuyFlowScreen({super.key});
@@ -33,16 +33,16 @@ class BuyFlowScreen extends StatelessWidget {
               target: const BuyGoldScreen(),
             ).animate().slideX(),
             
-            const SizedBox(height: 20),
-            
-            _buildOptionCard(
-              context: context,
-              title: 'SIP Investment',
-              subtitle: 'Automate your investments with regular installments to average out the market price.',
-              icon: Icons.calendar_today,
-              color: Colors.green,
-              target: const SipScreen(),
-            ).animate().slideX(delay: 200.ms),
+            // const SizedBox(height: 20),
+            // 
+            // _buildOptionCard(
+            //   context: context,
+            //   title: 'SIP Investment',
+            //   subtitle: 'Automate your investments with regular installments to average out the market price.',
+            //   icon: Icons.calendar_today,
+            //   color: Colors.green,
+            //   target: const SipScreen(),
+            // ).animate().slideX(delay: 200.ms),
           ],
         ),
       ),
