@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/gold_provider.dart';
@@ -47,16 +48,246 @@ class _DashboardScreenState extends State<DashboardScreen> {
     },
   ];
 
+  bool _isClaimingGift = false;
+  bool _isGiftDialogShowing = false;
+
   @override
   void initState() {
     super.initState();
     _startBannerTimer();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final goldProvider = Provider.of<GoldProvider>(context, listen: false);
-      goldProvider.fetchDashboard();
+      await goldProvider.fetchDashboard();
       goldProvider.fetchCurrentRate();
       goldProvider.fetchSilverRate();
+      if (mounted) {
+        _checkPendingGifts();
+      }
     });
+  }
+
+  void _checkPendingGifts() {
+    if (!mounted || _isGiftDialogShowing) return;
+    final goldProvider = Provider.of<GoldProvider>(context, listen: false);
+    final pendingGifts = goldProvider.pendingGifts;
+
+    if (pendingGifts.isNotEmpty) {
+      final gift = pendingGifts.first;
+      _showMandatoryClaimGiftDialog(gift);
+    }
+  }
+
+  void _showMandatoryClaimGiftDialog(dynamic gift) {
+    _isGiftDialogShowing = true;
+    final senderName = gift['sender_name'] ?? 'A Friend';
+    final senderMobile = gift['sender_mobile'] ?? '';
+    final amountInr = double.tryParse(gift['amount_inr']?.toString() ?? '0') ?? 0.0;
+    final goldGrams = double.tryParse(gift['gold_grams']?.toString() ?? '0') ?? 0.0;
+    final message = (gift['message'] != null && gift['message'].toString().trim().isNotEmpty)
+        ? gift['message'].toString()
+        : 'Wishing you pure prosperity with 24K Gold! 🎁';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Mandatory claim! Cannot dismiss by tapping outside
+      builder: (dialogCtx) {
+        return PopScope(
+          canPop: false, // Mandatory claim! Cannot dismiss with back button
+          child: StatefulBuilder(
+            builder: (ctx, setDialogState) {
+              return AlertDialog(
+                backgroundColor: const Color(0xFF141414),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: const BorderSide(color: Color(0xFFB08D57), width: 2),
+                ),
+                contentPadding: const EdgeInsets.all(24),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Gift Box Icon with Glow
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFFB08D57).withOpacity(0.4),
+                            Colors.transparent,
+                          ],
+                        ),
+                        border: Border.all(color: const Color(0xFFB08D57), width: 2),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.card_giftcard, color: Color(0xFFB08D57), size: 42),
+                      ),
+                    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+                    const SizedBox(height: 18),
+
+                    const Text(
+                      'You Received a Gold Gift! 🎉',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Gift info card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1F1F1F),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFB08D57).withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.person, color: Color(0xFFB08D57), size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'From: $senderName ($senderMobile)',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(color: Colors.white12, height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Pure 24K Gold:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              Text(
+                                '${goldGrams.toStringAsFixed(4)}g',
+                                style: const TextStyle(
+                                  color: Color(0xFFB08D57),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Worth:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              Text(
+                                '₹${amountInr.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(color: Colors.white12, height: 20),
+                          const Text('Personal Message:', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '"$message"',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      '⚠️ Mandatory Claim: Click below to accept and credit this 24K Gold to your vault.',
+                      style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Claim Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB08D57),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 4,
+                        ),
+                        onPressed: _isClaimingGift
+                            ? null
+                            : () async {
+                                setDialogState(() => _isClaimingGift = true);
+                                final goldProvider = Provider.of<GoldProvider>(context, listen: false);
+                                final res = await goldProvider.claimGoldGift(gift['id']);
+                                setDialogState(() => _isClaimingGift = false);
+
+                                if (!mounted) return;
+
+                                if (res['success'] == true) {
+                                  Navigator.pop(dialogCtx);
+                                  _isGiftDialogShowing = false;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(res['message'] ?? 'Gold claimed successfully! ✨'),
+                                      backgroundColor: Colors.green,
+                                      duration: const Duration(seconds: 4),
+                                    ),
+                                  );
+
+                                  // Check if there are other pending gifts
+                                  _checkPendingGifts();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(res['message'] ?? 'Failed to claim gift.'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                        child: _isClaimingGift
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_outline, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Claim Gold to My Vault',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   void _startBannerTimer() {
@@ -161,6 +392,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               await gold.fetchDashboard();
               await gold.fetchCurrentRate();
               await gold.fetchSilverRate();
+              _checkPendingGifts();
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

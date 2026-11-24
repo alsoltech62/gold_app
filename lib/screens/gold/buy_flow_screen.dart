@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'buy_gold_screen.dart';
+import 'gift_gold_screen.dart';
 // import 'sip_screen.dart';
 
 class BuyFlowScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class BuyFlowScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buy Gold'),
+        title: const Text('Buy / Gift Gold'),
         centerTitle: true,
       ),
       body: Padding(
@@ -32,6 +33,17 @@ class BuyFlowScreen extends StatelessWidget {
               color: const Color(0xFFB08D57),
               target: const BuyGoldScreen(),
             ).animate().slideX(),
+            
+            const SizedBox(height: 20),
+
+            _buildOptionCard(
+              context: context,
+              title: 'Gift Gold 🎁',
+              subtitle: 'Gift pure 24K gold to your loved ones or friends with a personal greeting and claim link.',
+              icon: Icons.card_giftcard,
+              color: const Color(0xFFE5C07B),
+              target: const GiftGoldScreen(),
+            ).animate().slideX(delay: 150.ms),
             
             // const SizedBox(height: 20),
             // 

@@ -11,6 +11,7 @@ class GoldProvider with ChangeNotifier {
   List<dynamic> _tickets = [];
   List<dynamic> _deliveries = [];
   Map<String, dynamic>? _settings;
+  List<dynamic> _pendingGifts = [];
   bool _isLoading = false;
 
   Map<String, dynamic>? get dashboardData => _dashboardData;
@@ -27,6 +28,7 @@ class GoldProvider with ChangeNotifier {
   List<dynamic> get tickets => _tickets;
   List<dynamic> get deliveries => _deliveries;
   Map<String, dynamic>? get settings => _settings;
+  List<dynamic> get pendingGifts => _pendingGifts;
   bool get isLoading => _isLoading;
 
   Future<void> fetchDashboard() async {
@@ -36,6 +38,11 @@ class GoldProvider with ChangeNotifier {
       final response = await _apiClient.get('/api/user/dashboard.php');
       if (response['success'] == true) {
         _dashboardData = response['data'];
+        if (_dashboardData?['pending_gifts'] != null) {
+          _pendingGifts = List<dynamic>.from(_dashboardData!['pending_gifts']);
+        } else {
+          _pendingGifts = [];
+        }
       }
     } catch (e) {
       debugPrint('Error fetching dashboard: $e');
@@ -415,5 +422,111 @@ class GoldProvider with ChangeNotifier {
       notifyListeners();
       return {'success': false, 'message': 'Network Error'};
     }
+  }
+
+  Future<Map<String, dynamic>> createGoldGift({
+    required double amountInr,
+    required String recipientMobile,
+    String? recipientName,
+    String? message,
+    required String paymentMethod,
+    String? utr,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final body = <String, dynamic>{
+        'action': 'create',
+        'amount_inr': amountInr,
+        'recipient_mobile': recipientMobile,
+        'recipient_name': recipientName ?? '',
+        'message': message ?? 'Wishing you pure 24K Gold! 🎁',
+        'payment_method': paymentMethod,
+      };
+      if (utr != null && utr.isNotEmpty) body['utr'] = utr;
+
+      final response = await _apiClient.post('/api/gold/gift.php', body);
+      _isLoading = false;
+      if (response['success'] == true) {
+        await fetchDashboard();
+      }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyGiftPayment(String orderId, {String? giftCode}) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/gold/gift.php', {
+        'action': 'verify_payment',
+        'order_id': orderId,
+        if (giftCode != null) 'gift_code': giftCode,
+      });
+      _isLoading = false;
+      if (response['success'] == true) {
+        await fetchDashboard();
+      }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error: $e'};
+    }
+  }
+
+  Future<List<dynamic>> fetchPendingGifts() async {
+    try {
+      final response = await _apiClient.get('/api/gold/gift.php?action=pending_gifts');
+      if (response['success'] == true && response['data'] != null) {
+        _pendingGifts = List<dynamic>.from(response['data']);
+        notifyListeners();
+        return _pendingGifts;
+      }
+    } catch (e) {
+      debugPrint('Error fetching pending gifts: $e');
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> claimGoldGift(dynamic giftId, {String? giftCode}) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.post('/api/gold/gift.php', {
+        'action': 'claim',
+        'gift_id': giftId,
+        if (giftCode != null) 'gift_code': giftCode,
+      });
+      _isLoading = false;
+      if (response['success'] == true) {
+        _pendingGifts.removeWhere((g) => g['id'] == giftId || (giftCode != null && g['gift_code'] == giftCode));
+        await fetchDashboard();
+      }
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Network Error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMyGifts() async {
+    try {
+      final response = await _apiClient.get('/api/gold/gift.php?action=my_gifts');
+      if (response['success'] == true) {
+        return response['data'] ?? {};
+      }
+    } catch (e) {
+      debugPrint('Error fetching my gifts: $e');
+    }
+    return {};
   }
 }
